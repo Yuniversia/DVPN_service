@@ -1,0 +1,4 @@
+flask
+flask_sqlachemy
+flask_login
+flask_wtf-1.2.2
