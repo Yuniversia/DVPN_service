@@ -26,3 +26,34 @@ class Group_member(db.Model):
 
     group = relationship("Group", backref="group_member")
     user = relationship("User", backref="group_member")
+
+def get_groups(user_id: int):
+    groups = db.session.query(Group_member).filter_by(user_id=user_id).fetchall_or_none()
+
+    return groups
+
+def create_group(name: str, ip: str):
+    g = Group(network_name=name, ip=ip)
+    db.session.add(g)
+
+    # Try to commit, and return True if sucsess
+    try:
+        db.session.commit()
+        return True, 'Record added success'
+    
+    except Exception as e:
+        db.session.reset()
+        return False, e
+    
+def add_member(user_id: int, group_id: int, ip):
+    m = Group_member(user_id=user_id, group_id=group_id ,ip=ip)
+    db.session.add(m)
+
+    # Try to commit, and return True if sucsess
+    try:
+        db.session.commit()
+        return True, 'Record added success'
+    
+    except Exception as e:
+        db.session.reset()
+        return False, e

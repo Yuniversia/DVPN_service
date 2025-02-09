@@ -4,6 +4,7 @@ import os
 
 from app.users import crt_usr, get_usr, get_psw, login_manager
 from .forms import Sign_inForm, Sign_upForm
+from .groups import get_groups, create_group, add_member
 
 from flask_login import login_required, logout_user, login_user, current_user
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash
@@ -72,9 +73,27 @@ def logout():
     logout_user()
     return redirect(url_for('auth.index')), 302
 
+@auth.route('/create_group')
+@login_required
+def grp():
+    name = "Test_group"
+    ip = "192.168.0.1/24"
+    create_group(name, ip)
+    return "success"
+
+@auth.route('/add/<group_id>')
+@login_required
+def mem(group_id):
+    name = "Test_group"
+    ip = '192.168.0.2'
+    group = add_member(current_user.id, group_id, ip)
+    return "success"
+
 @auth.route('/person')
 @login_required
 def person():
+    # groups = get_groups(current_user.id)
+    # print(groups)
     return render_template('prof.html', username=current_user.name)
     
 @auth.route("/favicon.ico")
