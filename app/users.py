@@ -1,18 +1,26 @@
 import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin, LoginManager
 
 from .extenssion import db
 
-login_manager = LoginManager()
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin, LoginManager
+from sqlalchemy.orm import relationship
 
+login_manager = LoginManager()
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
     email = db.Column(db.String)
-    psw = db.Column(db.String(500), nullable=True)
-    date = db.Column(db.DateTime, default=datetime.datetime.now())
+    psw = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now())
+
+    # group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=True)
+    # group = relationship("Group", backref="users")
+
+    # peer_id = db.Column(db.String(34), default=gen_peer_id)
+    # ip = db.Column(db.String, nullable=True)
+    # key = db.Column(db.String, nullable=True)
 
     def __repr__(self):
         return f"<users {self.id}>"
@@ -25,6 +33,7 @@ def load_user(user_id):
 def crt_db():
     from app import get_app
     import app.links
+    import app.groups
 
     app = get_app()
 
@@ -58,10 +67,13 @@ def get_usr(name: str):
 
 # Get password comparasion with usr psw
 def get_psw(name: str, psw: str):
-    db_psw = get_usr(name).psw
+    try:
+        db_psw = get_usr(name).psw
 
-    # Return True if the password matches
-    return check_password_hash(db_psw, psw)
+        # Return True if the password matches
+        return check_password_hash(db_psw, psw)
+    except:
+        False
 
 def del_usr(name: str):
     res = db.session.query(User).filter_by(name=name).delete()

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVPN Group Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f0f2f5;
+            position: relative;
+        }
+
+        /* Навбар */
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-brand {
+            font-weight: 600;
+            color: #1877f2;
+            font-size: 1.2rem;
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: #1877f2;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .nav-btn:hover {
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+        }
+
+        /* Контейнер групп */
+        .groups-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .group-item {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .group-header {
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+
+        .group-header:hover {
+            background: #f1f3f5;
+        }
+
+        .group-content {
+            display: none;
+            padding: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .group-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .group-table th {
+            background: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .group-table th,
+        .group-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .delete-user-btn {
+            background: #ffffff;
+            color: #1877f2;
+            padding: 0.5rem 1rem;
+            border: 1px solid #1877f2;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-user-btn:hover {
+            background: #1877f2;
+            color: white;
+        }
+
+        .delete-group-btn {
+            background: #dc3545;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        .delete-group-btn:hover {
+            opacity: 0.9;
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        input[type="checkbox"]:checked ~ .group-content {
+            display: block;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal:target {
+            display: block;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .modal:target + .modal-overlay {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #404040;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group input {
+            width: auto;
+            display: block;
+        }
+
+        .hint {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            .group-table th,
+            .group-table td {
+                padding: 0.5rem;
+            }
+
+            .modal {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Навбар -->
+    <nav class="navbar">
+        <div class="nav-brand">DVPN</div>
+        <div class="nav-btns">
+            <a href="#create-group" class="nav-btn">Группы</a>
+            <button class="nav-btn logout-btn">Выйти</button>
+        </div>
+    </nav>
+
+    <h1 style="margin: 2rem auto; padding: 0 2rem; color: #1877f2;">Пользователь: {{username}}</h1>
+    <!-- Список групп -->
+    <div class="groups-container">
+        <div class="group-item">
+            <input type="checkbox" id="group1">
+            <label class="group-header" for="group1">
+                <span>Developers Team</span>
+                <span>▶</span>
+            </label>
+            
+            <div class="group-content">
+                <table class="group-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя</th>
+                            <th>IP-адрес</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Иван Иванов</td>
+                            <td>192.168.1.1</td>
+                            <td>
+                                <button class="delete-user-btn">Удалить</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Мария Петрова</td>
+                            <td>192.168.1.2</td>
+                            <td>
+                                <button class="delete-user-btn">Удалить</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="delete-group-btn">Удалить группу</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания группы -->
+    <div id="create-group" class="modal">
+        <h2 style="margin-bottom: 1.5rem;">Создать группу</h2>
+        <form>
+            <div class="form-group">
+                <label>Имя группы</label>
+                <input type="text" required>
+            </div>
+            <div class="form-group">
+                <label>IP-адрес</label>
+                <input type="text" placeholder="192.168.0.1/24" required>
+                <span class="hint">Формат: XXX.XXX.XXX.XXX/XX</span>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="encryption">
+                <label for="encryption">Шифрование подключения</label>
+            </div>
+            <div class="form-group">
+                <a href="#" class="nav-btn" style="width: 100%; text-align: center;">Создать</a>
+            </div>
+        </form>
+    </div>
+    <a href="#" class="modal-overlay"></a>
+</body>
+</html>

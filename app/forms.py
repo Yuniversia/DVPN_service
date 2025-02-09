@@ -17,5 +17,4 @@ class Sign_upForm(FlaskForm):
 class GroupForm(FlaskForm):
     net_name = StringField("Network name", validators=[DataRequired()])
     ip = StringField("IP", validators=[DataRequired()])
-    mask = StringField("Mask", validators=[DataRequired()])
-    submit = SubmitField("Sign In")
+    encrypt_key = BooleanField("Encrypting", default=False)

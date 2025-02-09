@@ -75,7 +75,7 @@ def logout():
 @auth.route('/person')
 @login_required
 def person():
-    return f"current user is {current_user.name}"
+    return render_template('prof.html', username=current_user.name)
     
 @auth.route("/favicon.ico")
 def icon():
