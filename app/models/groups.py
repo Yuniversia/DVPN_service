@@ -13,9 +13,12 @@ class Group(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     network_name = db.Column(db.String, unique=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     ip = db.Column(db.String)
     encryting = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now())
+
+    user = relationship("User", backref="groups")
 
 class Group_member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,8 +36,8 @@ def get_groups(user_id: int):
 
     return groups
 
-def create_group(name: str, ip: str, key: bool):
-    g = Group(network_name=name, ip=ip, encryting=key)
+def create_group(name: str, author: int, ip: str, key: bool):
+    g = Group(network_name=name, author_id=author, ip=ip, encryting=key)
     db.session.add(g)
 
     # Try to commit, and return True if sucsess

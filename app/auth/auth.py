@@ -84,9 +84,11 @@ def group():
     ip = form.ip.data
     key = form.encrypt_key.data
 
+    user_id = current_user.id
+
     if check_ip(ip): #Check is ip corect 
-        res = create_group(name, ip, key)
-        add_member(current_user.id, res[2], '192.168.0.1')
+        res = create_group(name, user_id, ip, key)
+        add_member(user_id, res[2], '192.168.0.1')
         return redirect(url_for("auth.person"))
     flash("Ip is not correct", "ip")
     return redirect(url_for("auth.person"))
