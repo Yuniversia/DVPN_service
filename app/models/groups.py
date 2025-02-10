@@ -1,7 +1,7 @@
 import uuid
 import datetime
 
-from .extenssion import db
+from .ext import db
 
 from sqlalchemy.orm import relationship
 

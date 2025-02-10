@@ -2,9 +2,10 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
-from app.users import crt_usr, get_usr, get_psw, login_manager
+from . import auth
 from .forms import Sign_inForm, Sign_upForm
-from .groups import get_groups, create_group, add_member
+from app.models import crt_usr, get_usr, get_psw, login_manager
+from app.models import get_groups, create_group, add_member
 
 from flask_login import login_required, logout_user, login_user, current_user
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash
@@ -13,7 +14,7 @@ load_dotenv()
 
 login_manager.login_view = 'auth.index'
 
-auth = Blueprint('auth', __name__)
+auth = Blueprint('auth', __name__, template_folder="../templates", static_folder="../static")
 
 @auth.route("/")
 def index():

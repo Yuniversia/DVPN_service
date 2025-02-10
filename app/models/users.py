@@ -1,6 +1,6 @@
 import datetime
 
-from .extenssion import db
+from .ext import db
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, LoginManager
@@ -29,17 +29,6 @@ class User(db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create databse or table if not exsist
-def crt_db():
-    from app import get_app
-    import app.links
-    import app.groups
-
-    app = get_app()
-
-    with app.app_context():
-        if 'user' in db.metadata.tables:
-            db.create_all()
 
 # Function, where we create new user
 def crt_usr(name: str, email: str, psw: str):

@@ -243,8 +243,8 @@
     <nav class="navbar">
         <div class="nav-brand">DVPN</div>
         <div class="nav-btns">
-            <a href="#create-group" class="nav-btn">Группы</a>
-            <button class="nav-btn logout-btn">Выйти</button>
+            <a href="#create-group" class="nav-btn">Группа</a>
+            <form method="get"><input formaction="/logout" class="nav-btn logout-btn" value="Выйти" type="submit"></input></form>
         </div>
     </nav>
 
@@ -307,7 +307,7 @@
             </div>
             <div class="form-group checkbox-group">
                 <input type="checkbox" id="encryption">
-                <label for="encryption">Шифрование подключения</label>
+                <label for="encryption">Шифрование</label>
             </div>
             <div class="form-group">
                 <a href="#" class="nav-btn" style="width: 100%; text-align: center;">Создать</a>

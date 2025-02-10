@@ -1,4 +1,4 @@
-from .extenssion import db
+from .ext import db
 
 class Link(db.Model):
     id = db.Column(db.Integer, primary_key=True)

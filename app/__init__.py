@@ -1,4 +1,4 @@
-from .users import db, login_manager
+from .models import db, login_manager
 from dotenv import load_dotenv
 import os
 from flask import Flask

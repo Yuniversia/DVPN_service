@@ -1,4 +1,5 @@
 .env
 instance
-app/extenssion/__pycache__
+app/auth/__pycache__
+app/models/__pycache__
 app/__pycache__
