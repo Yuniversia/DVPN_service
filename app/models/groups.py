@@ -14,6 +14,7 @@ class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     network_name = db.Column(db.String, unique=True)
     ip = db.Column(db.String)
+    encryting = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now())
 
 class Group_member(db.Model):
@@ -32,14 +33,14 @@ def get_groups(user_id: int):
 
     return groups
 
-def create_group(name: str, ip: str):
-    g = Group(network_name=name, ip=ip)
+def create_group(name: str, ip: str, key: bool):
+    g = Group(network_name=name, ip=ip, encryting=key)
     db.session.add(g)
 
     # Try to commit, and return True if sucsess
     try:
         db.session.commit()
-        return True, 'Record added success'
+        return True, 'Record added success', g.id
     
     except Exception as e:
         db.session.reset()

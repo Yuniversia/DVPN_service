@@ -2,4 +2,5 @@
 instance
 app/auth/__pycache__
 app/models/__pycache__
+app/validation/__pycache__
 app/__pycache__

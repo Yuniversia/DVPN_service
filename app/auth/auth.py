@@ -2,10 +2,11 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
-from . import auth
-from .forms import Sign_inForm, Sign_upForm
+
+from .forms import Sign_inForm, Sign_upForm, GroupForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
 from app.models import get_groups, create_group, add_member
+from app.validation import check_ip
 
 from flask_login import login_required, logout_user, login_user, current_user
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash
@@ -74,28 +75,29 @@ def logout():
     logout_user()
     return redirect(url_for('auth.index')), 302
 
-@auth.route('/create_group')
+@auth.route('/group', methods=["POST"])
 @login_required
-def grp():
-    name = "Test_group"
-    ip = "192.168.0.1/24"
-    create_group(name, ip)
-    return "success"
+def group():
 
-@auth.route('/add/<group_id>')
-@login_required
-def mem(group_id):
-    name = "Test_group"
-    ip = '192.168.0.2'
-    group = add_member(current_user.id, group_id, ip)
-    return "success"
+    form = GroupForm()
+    name = form.network_name.data
+    ip = form.ip.data
+    key = form.encrypt_key.data
+
+    if check_ip(ip): #Check is ip corect 
+        res = create_group(name, ip, key)
+        add_member(current_user.id, res[2], '192.168.0.1')
+        return redirect(url_for("auth.person"))
+    flash("Ip is not correct", "ip")
+    return redirect(url_for("auth.person"))
 
 @auth.route('/person')
 @login_required
 def person():
     # groups = get_groups(current_user.id)
     # print(groups)
-    return render_template('prof.html', username=current_user.name)
+    group_form = GroupForm()
+    return render_template('prof.html', username=current_user.name, group_form=group_form)
     
 @auth.route("/favicon.ico")
 def icon():

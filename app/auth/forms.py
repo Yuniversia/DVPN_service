@@ -15,6 +15,6 @@ class Sign_upForm(FlaskForm):
     submit = SubmitField("Sign In")
 
 class GroupForm(FlaskForm):
-    net_name = StringField("Network name", validators=[DataRequired()])
-    ip = StringField("IP", validators=[DataRequired()])
+    network_name = StringField("Network name", validators=[DataRequired()])
+    ip = StringField("IP", validators=[DataRequired()], render_kw={"placeholder": "192.168.0.1/24"})
     encrypt_key = BooleanField("Encrypting", default=False)
