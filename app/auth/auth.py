@@ -6,7 +6,7 @@ import os
 from .forms import Sign_inForm, Sign_upForm, GroupForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
 from app.models import get_groups, create_group, add_member
-from app.validation import check_ip
+from app.validation import check_ip, gen_ip
 
 from flask_login import login_required, logout_user, login_user, current_user
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash
@@ -88,9 +88,23 @@ def group():
 
     if check_ip(ip): #Check is ip corect 
         res = create_group(name, user_id, ip, key)
-        add_member(user_id, res[2], '192.168.0.1')
+        if res[0]:
+            return redirect(url_for("auth.person"))
+        
+        flash("This name is unique", "name")
         return redirect(url_for("auth.person"))
+    
     flash("Ip is not correct", "ip")
+    return redirect(url_for("auth.person"))
+
+@auth.route('/group/<group_id>')
+@login_required
+def invite(group_id):
+
+    user_id = current_user.id
+
+    add_member(user_id, group_id, admin=False)
+
     return redirect(url_for("auth.person"))
 
 @auth.route('/person')

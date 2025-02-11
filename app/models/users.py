@@ -13,7 +13,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String, unique=True)
     email = db.Column(db.String)
     psw = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
 
     # group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=True)
     # group = relationship("Group", backref="users")
