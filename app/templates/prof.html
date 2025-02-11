@@ -276,7 +276,7 @@
         <div class="group-item">
             <input type="checkbox" id="group{{loop.index}}">
             <label class="group-header" for="group{{loop.index}}">
-                <span>{{ members_group.group.network_name }}</span>
+                <span>{{ members_group.group.network_name }} | {{ members_group.group_id }}</span>
                 <span>▶</span>
             </label>
             
@@ -309,7 +309,7 @@
                 </table>
                 <button class="token-group-btn">Создать токен</button>
                 {% if user.id == members_group.group.author_id %}
-                <form action="/group" method="delete" style="display: contents;">
+                <form action="/del/group" method="post"  style="display: contents;">
                 <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
                 <input class="delete-group-btn" type="submit" value="Удалить группу">
                 </form>

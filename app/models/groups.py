@@ -81,9 +81,13 @@ def create_group(name: str, author: int, ip: str, key: bool):
     
 def delete_group_db(user_id: int, group_id: int):
     group = get_group(group_id)
+    members = get_group_members(group_id)
 
-    if user_id == group_id:
-        group.delete()
+    if user_id == group.author_id:
+        db.session.delete(group)
+        for i in members:
+            db.session.delete(i)
+        db.session.commit()
         return True
     return False
 

@@ -5,7 +5,7 @@ import os
 
 from .forms import Sign_inForm, Sign_upForm, GroupForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
-from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db
+from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group
 from app.validation import check_ip
 
 from flask_login import login_required, logout_user, login_user, current_user
@@ -97,26 +97,32 @@ def group():
     flash("Не правильный формат IP", "ip")
     return redirect(url_for("auth.person"))
 
-@auth.route('/group', methods=["DELETE"])
+@auth.route('/del/group', methods=["POST"])
 @login_required
 def delete_group():
     data = request.form
     group_id = data['group_id']
 
     res = delete_group_db(current_user.id, group_id)
+    print(res)
     return redirect(url_for("auth.person"))
 
 @auth.route('/group/<group_id>')
 @login_required
 def invite(group_id):
 
-    user_id = current_user.id
+    if get_group(group_id):
 
-    res = add_member(user_id, group_id, admin=False)
-    if res:
+        user_id = current_user.id
+
+        res = add_member(user_id, group_id, admin=False)
+        if res:
+            return redirect(url_for("auth.person"))
+
+        flash("Вы уже состоите в этой группе или произошла ошибка", "main")
         return redirect(url_for("auth.person"))
-
-    flash("Вы уже состоите в этой группе или произошла ошибка", "main")
+    
+    flash("Пошёл нахуй, такой группы нет", "main")
     return redirect(url_for("auth.person"))
 
 @auth.route('/person')
