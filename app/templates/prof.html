@@ -142,6 +142,24 @@
             opacity: 0.9;
         }
 
+        .token-group-btn {
+            background: #ffffff;
+            color: #1877f2;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #1877f2;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+            
+        }
+
+        .token-group-btn:hover {
+            opacity: 0.9;
+            background: #1877f2;
+            color: white;
+        }
+
         input[type="checkbox"] {
             display: none;
         }
@@ -252,13 +270,13 @@
     <h2 style="color: #dc3545; align-items: center; text-align: center; margin-top: 20px;"  >{{ msg }}</h2>
     {% endif %}
     {% endfor %}
-    <h1 style="margin: 2rem auto; padding: 0 2rem; color: #1877f2;">Пользователь: {{username}}</h1>
-    <!-- Список групп -->
+    <h1 style="margin: 2rem auto; padding: 0 2rem; color: #1877f2;">Пользователь: {{user.name}}</h1>
+    {% for members_group in groups %}
     <div class="groups-container">
         <div class="group-item">
-            <input type="checkbox" id="group1">
-            <label class="group-header" for="group1">
-                <span>Developers Team</span>
+            <input type="checkbox" id="group{{loop.index}}">
+            <label class="group-header" for="group{{loop.index}}">
+                <span>{{ members_group.group.network_name }}</span>
                 <span>▶</span>
             </label>
             
@@ -269,32 +287,40 @@
                             <th>ID</th>
                             <th>Имя</th>
                             <th>IP-адрес</th>
+                            {% if user.id == members_group.group.author_id %}
                             <th>Действия</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
+                        {% for member in group_member(members_group.group_id) %}
                         <tr>
-                            <td>1</td>
-                            <td>Иван Иванов</td>
-                            <td>192.168.1.1</td>
+                            <td>{{ member.user_id }}</td>
+                            <td>{{ member.user.name }}</td>
+                            <td>{{ member.ip }}</td>
+                            {% if user.id == members_group.group.author_id %}
                             <td>
                                 <button class="delete-user-btn">Удалить</button>
                             </td>
+                            {% endif %}
                         </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Мария Петрова</td>
-                            <td>192.168.1.2</td>
-                            <td>
-                                <button class="delete-user-btn">Удалить</button>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
-                <button class="delete-group-btn">Удалить группу</button>
+                <button class="token-group-btn">Создать токен</button>
+                {% if user.id == members_group.group.author_id %}
+                <form action="/group" method="delete" style="display: contents;">
+                <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
+                <input class="delete-group-btn" type="submit" value="Удалить группу">
+                </form>
+                {% else %}
+                <button class="delete-group-btn">Выйти из группы</button>
+                {% endif %}
             </div>
         </div>
     </div>
+    {% endfor %}
+    <!-- Список групп -->
 
     <!-- Модальное окно создания группы -->
     <div id="create-group" class="modal">

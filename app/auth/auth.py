@@ -5,8 +5,8 @@ import os
 
 from .forms import Sign_inForm, Sign_upForm, GroupForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
-from app.models import get_groups, create_group, add_member
-from app.validation import check_ip, gen_ip
+from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db
+from app.validation import check_ip
 
 from flask_login import login_required, logout_user, login_user, current_user
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash
@@ -97,6 +97,15 @@ def group():
     flash("Не правильный формат IP", "ip")
     return redirect(url_for("auth.person"))
 
+@auth.route('/group', methods=["DELETE"])
+@login_required
+def delete_group():
+    data = request.form
+    group_id = data['group_id']
+
+    res = delete_group_db(current_user.id, group_id)
+    return redirect(url_for("auth.person"))
+
 @auth.route('/group/<group_id>')
 @login_required
 def invite(group_id):
@@ -113,10 +122,10 @@ def invite(group_id):
 @auth.route('/person')
 @login_required
 def person():
-    # groups = get_groups(current_user.id)
-    # print(groups)
+    group = get_groups(current_user.id)
     group_form = GroupForm()
-    return render_template('prof.html', username=current_user.name, group_form=group_form)
+    return render_template('prof.html', user=current_user, 
+                           group_form=group_form, groups=group, group_member=get_group_members)
     
 @auth.route("/favicon.ico")
 def icon():

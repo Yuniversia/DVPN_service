@@ -3,6 +3,7 @@ import datetime
 
 from .ext import db
 from app.validation import gen_ip
+from .users import get_usr
 
 from sqlalchemy.orm import relationship
 
@@ -34,7 +35,7 @@ class Group_member(db.Model):
     user = relationship("User", backref="group_member")
 
 def get_groups(user_id: int):
-    groups = db.session.query(Group_member).filter_by(user_id=user_id).fetchall_or_none()
+    groups = db.session.query(Group_member).filter_by(user_id=user_id).all()
 
     return groups
 
@@ -51,6 +52,11 @@ def get_member(user_id: int, group_id: int):
     if res:
         return True
     return False
+
+def get_group_members(group_id: int):
+    res = db.session.query(Group_member).filter_by(group_id=group_id).all()
+
+    return res
 
 def search_ip(group_id: int, ip: str) -> bool: 
     res = db.session.query(Group_member).filter(Group_member.ip == ip, Group_member.group_id == group_id).one_or_none()
@@ -72,6 +78,15 @@ def create_group(name: str, author: int, ip: str, key: bool):
     except Exception as e:
         db.session.reset()
         return False, e
+    
+def delete_group_db(user_id: int, group_id: int):
+    group = get_group(group_id)
+
+    if user_id == group_id:
+        group.delete()
+        return True
+    return False
+
     
 def add_member(user_id: int, group_id: int, admin=False):
     group = get_group(group_id)
