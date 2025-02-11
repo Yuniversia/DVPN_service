@@ -91,10 +91,10 @@ def group():
         if res[0]:
             return redirect(url_for("auth.person"))
         
-        flash("This name is unique", "name")
+        flash("Это имя группы не уникально", "name")
         return redirect(url_for("auth.person"))
     
-    flash("Ip is not correct", "ip")
+    flash("Не правильный формат IP", "ip")
     return redirect(url_for("auth.person"))
 
 @auth.route('/group/<group_id>')
@@ -103,8 +103,11 @@ def invite(group_id):
 
     user_id = current_user.id
 
-    add_member(user_id, group_id, admin=False)
+    res = add_member(user_id, group_id, admin=False)
+    if res:
+        return redirect(url_for("auth.person"))
 
+    flash("Вы уже состоите в этой группе или произошла ошибка", "main")
     return redirect(url_for("auth.person"))
 
 @auth.route('/person')

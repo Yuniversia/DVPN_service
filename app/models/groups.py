@@ -39,9 +39,18 @@ def get_groups(user_id: int):
     return groups
 
 def get_group(group_id: int):
-    groups = db.session.query(Group).filter_by(id=group_id).one_or_none()
+    group = db.session.query(Group).filter_by(id=group_id).one_or_none()
 
-    return groups
+    return group
+
+def get_member(user_id: int, group_id: int):
+    res = db.session.query(Group_member).filter(Group_member.user_id == user_id, Group_member.group_id == group_id).one_or_none()
+
+    print(res)
+
+    if res:
+        return True
+    return False
 
 def search_ip(group_id: int, ip: str) -> bool: 
     res = db.session.query(Group_member).filter(Group_member.ip == ip, Group_member.group_id == group_id).one_or_none()
@@ -67,6 +76,11 @@ def create_group(name: str, author: int, ip: str, key: bool):
 def add_member(user_id: int, group_id: int, admin=False):
     group = get_group(group_id)
 
+    member = get_member(user_id, group_id)
+
+    if member is True:
+        return False
+
     ip = gen_ip(group.ip, group_id)
 
     m = Group_member(user_id=user_id, group_id=group_id ,ip=ip, admin=admin)
@@ -75,8 +89,8 @@ def add_member(user_id: int, group_id: int, admin=False):
     # Try to commit, and return True if sucsess
     try:
         db.session.commit()
-        return True, 'Record added success'
+        return True
     
     except Exception as e:
         db.session.reset()
-        return False, e
+        return False

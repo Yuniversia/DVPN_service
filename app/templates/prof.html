@@ -247,7 +247,11 @@
             <form method="get"><input formaction="/logout" class="nav-btn logout-btn" value="Выйти" type="submit"></input></form>
         </div>
     </nav>
-
+    {% for cat, msg in get_flashed_messages(True) %}
+    {% if cat == "main" %}
+    <h2 style="color: #dc3545; align-items: center; text-align: center; margin-top: 20px;"  >{{ msg }}</h2>
+    {% endif %}
+    {% endfor %}
     <h1 style="margin: 2rem auto; padding: 0 2rem; color: #1877f2;">Пользователь: {{username}}</h1>
     <!-- Список групп -->
     <div class="groups-container">
@@ -300,12 +304,19 @@
             <div class="form-group">
                 <label>Имя группы</label>
                 {{ group_form.network_name() }}
+                {% for cat, msg in get_flashed_messages(True) %}
+                {% if cat == "name" %}
+                <p style="color: #dc3545;">{{ msg }}</p>
+                {% endif %}
+                {% endfor %}
             </div>
             <div class="form-group">
                 <label>IP-адрес</label>
                 {{ group_form.ip() }}
-                {% for msg in get_flashed_messages() %}
-                <p style="color: #dc3545;">Не првильный формат IP</p>
+                {% for cat, msg in get_flashed_messages(True) %}
+                {% if cat == "ip" %}
+                <p style="color: #dc3545;">{{ msg }}</p>
+                {% endif %}
                 {% endfor %}
                 <span class="hint">Формат: XXX.XXX.XXX.XXX/XX</span>
             </div>
