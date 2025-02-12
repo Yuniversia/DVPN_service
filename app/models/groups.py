@@ -48,6 +48,28 @@ def get_group_members(group_id: int):
 
     return res
 
+def add_member(user_id: int, group_id: int, admin=None):
+    group = get_group(group_id)
+
+    member = get_member(user_id, group_id)
+
+    if member:
+        return False
+
+    ip = gen_ip(group.ip, group_id)
+
+    m = Group_member(user_id=user_id, group_id=group_id ,ip=ip, admin=admin)
+    db.session.add(m)
+
+    # Try to commit, and return True if sucsess
+    try:
+        db.session.commit()
+        return True
+    
+    except Exception as e:
+        db.session.reset()
+        return False
+
 def leave_member(user_id: int, group_id: int):
     member = get_member(user_id, group_id)
 
@@ -71,8 +93,6 @@ def delete_group_member(author_id: int, group_id: int, user_id: int):
     leave_member(user_id, group_id)
     return True
     
-
-
 
 def create_group(name: str, author: int, ip: str, key: bool):
     g = Group(network_name=name, author_id=author, ip=ip, encryting=key)
@@ -107,28 +127,6 @@ def delete_group_db(user_id: int, group_id: int):
         return True
     return False
 
-    
-def add_member(user_id: int, group_id: int, admin=None):
-    group = get_group(group_id)
-
-    member = get_member(user_id, group_id)
-
-    if member:
-        return False
-
-    ip = gen_ip(group.ip, group_id)
-
-    m = Group_member(user_id=user_id, group_id=group_id ,ip=ip, admin=admin)
-    db.session.add(m)
-
-    # Try to commit, and return True if sucsess
-    try:
-        db.session.commit()
-        return True
-    
-    except Exception as e:
-        db.session.reset()
-        return False
     
 
 def search_ip(group_id: int, ip: str) -> bool: 

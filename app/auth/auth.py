@@ -5,7 +5,7 @@ import os
 
 from .forms import Sign_inForm, Sign_upForm, GroupForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
-from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group, delete_group_member, leave_member
+from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group, delete_group_member, leave_member, get_group_peer
 from app.models import create_token
 from app.validation import check_ip
 
@@ -178,6 +178,14 @@ def person():
     group_form = GroupForm()
     return render_template('prof.html', user=current_user, 
                            group_form=group_form, groups=group, group_member=get_group_members)
+
+@auth.route('/peer_id', methods=['POST'])
+def peer_id():
+    data = request.form
+    token = data['token']
+
+    res = get_group_peer(token)
+    return jsonify(res)
     
 @auth.route("/favicon.ico")
 def icon():
