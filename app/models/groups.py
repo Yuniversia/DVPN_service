@@ -21,6 +21,7 @@ class Group(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.now)
 
     user = relationship("User", backref="groups")
+    group_member = relationship("Group_member", back_populates="group", cascade="all, delete-orphan")
 
 class Group_member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,8 +32,9 @@ class Group_member(db.Model):
     key = db.Column(db.String, nullable=True)
     admin = db.Column(db.Boolean, default=False)
 
-    group = relationship("Group", backref="group_member")
+    group = relationship("Group", back_populates="group_member")
     user = relationship("User", backref="group_member")
+
 
 def get_groups(user_id: int):
     groups = db.session.query(Group_member).filter_by(user_id=user_id).all()
@@ -81,12 +83,12 @@ def create_group(name: str, author: int, ip: str, key: bool):
     
 def delete_group_db(user_id: int, group_id: int):
     group = get_group(group_id)
-    members = get_group_members(group_id)
+    # members = get_group_members(group_id)
 
     if user_id == group.author_id:
         db.session.delete(group)
-        for i in members:
-            db.session.delete(i)
+        # for i in members:
+        #     db.session.delete(i)
         db.session.commit()
         return True
     return False
