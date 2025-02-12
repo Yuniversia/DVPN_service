@@ -5,11 +5,12 @@ import os
 
 from .forms import Sign_inForm, Sign_upForm, GroupForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
-from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group
+from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group, delete_group_member, leave_member
+from app.models import create_token
 from app.validation import check_ip
 
 from flask_login import login_required, logout_user, login_user, current_user
-from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash
+from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash, Response
 
 load_dotenv()
 
@@ -75,6 +76,16 @@ def logout():
     logout_user()
     return redirect(url_for('auth.index')), 302
 
+
+
+
+
+"""" Another code part """
+
+
+
+
+
 @auth.route('/group', methods=["POST"])
 @login_required
 def group():
@@ -97,17 +108,37 @@ def group():
     flash("Не правильный формат IP", "ip")
     return redirect(url_for("auth.person"))
 
-@auth.route('/del/group', methods=["POST"])
+@auth.route('/group/del', methods=["POST"])
 @login_required
 def delete_group():
     data = request.form
     group_id = data['group_id']
 
     res = delete_group_db(current_user.id, group_id)
-    print(res)
     return redirect(url_for("auth.person"))
 
-@auth.route('/group/<group_id>')
+@auth.route('/group/del_member', methods=['POST'])
+@login_required
+def del_member():
+
+    data = request.form
+    group_id = data['group_id']
+    user_id = data['user_id']
+
+    res = delete_group_member(current_user.id, group_id, user_id)
+    return redirect(url_for("auth.person"))
+
+@auth.route('/group/leave', methods=['POST'])
+@login_required
+def leave_member_():
+
+    data = request.form
+    group_id = data['group_id']
+
+    res = leave_member(current_user.id, group_id)
+    return redirect(url_for("auth.person"))
+
+@auth.route('/token/<group_id>')
 @login_required
 def invite(group_id):
 
@@ -124,6 +155,21 @@ def invite(group_id):
     
     flash("Пошёл нахуй, такой группы нет", "main")
     return redirect(url_for("auth.person"))
+
+@auth.route('/token', methods=['POST'])
+@login_required
+def token():
+
+    data = request.form
+    group_id = data['group_id']
+
+    res = create_token(current_user.id, group_id)
+    return Response(
+        res,
+        mimetype='text/plain',
+        headers={
+            'Content-Disposition': 'attachment; filename="token.txt"'
+        })
 
 @auth.route('/person')
 @login_required

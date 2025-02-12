@@ -295,26 +295,42 @@
                     <tbody>
                         {% for member in group_member(members_group.group_id) %}
                         <tr>
+                            {% if member.user_id == members_group.group.author_id %}
+                            <td><b>{{ member.user_id }}</b></td>
+                            <td><b>{{ member.user.name }}</b></td>
+                            <td><b>{{ member.ip }}</b></td>
+                            {% else %}
                             <td>{{ member.user_id }}</td>
                             <td>{{ member.user.name }}</td>
                             <td>{{ member.ip }}</td>
-                            {% if user.id == members_group.group.author_id %}
+                            {% endif %}
+                            {% if user.id == members_group.group.author_id and  member.user_id != members_group.group.author_id %}
                             <td>
+                                <form action="/group/del_member" method="post"  style="display: contents;">
+                                <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
+                                <input type="hidden" name="user_id" value="{{ member.user_id }}">
                                 <button class="delete-user-btn">Удалить</button>
+                                </form>
                             </td>
                             {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-                <button class="token-group-btn">Создать токен</button>
+                <form action="/token" method="post"  style="display: contents;">
+                <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
+                <input class="token-group-btn" type="submit" value="Создать токен">
+                </form>
                 {% if user.id == members_group.group.author_id %}
-                <form action="/del/group" method="post"  style="display: contents;">
+                <form action="/group/del" method="post"  style="display: contents;">
                 <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
                 <input class="delete-group-btn" type="submit" value="Удалить группу">
                 </form>
                 {% else %}
-                <button class="delete-group-btn">Выйти из группы</button>
+                <form action="/group/leave" method="post"  style="display: contents;">
+                <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
+                <input class="delete-group-btn" type="submit" value="Выйти из группы">
+                </form>
                 {% endif %}
             </div>
         </div>

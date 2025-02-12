@@ -21,7 +21,9 @@ class Group(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.now)
 
     user = relationship("User", backref="groups")
-    group_member = relationship("Group_member", back_populates="group", cascade="all, delete-orphan")
+    group_member = relationship("Group_member", foreign_keys="Group_member.group_id",
+                                 back_populates="group", cascade="all, delete-orphan")
+    token = relationship("Token", back_populates="group", cascade="all, delete-orphan")
 
 class Group_member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -30,12 +32,62 @@ class Group_member(db.Model):
     usr_uuid = db.Column(db.String(34), default=gen_peer_id)
     ip = db.Column(db.String)
     key = db.Column(db.String, nullable=True)
-    admin = db.Column(db.Boolean, default=False)
+    admin = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=True)
 
-    group = relationship("Group", back_populates="group_member")
+    group = relationship("Group", back_populates="group_member", foreign_keys=[group_id])
     user = relationship("User", backref="group_member")
 
 
+def get_member(user_id: int, group_id: int):
+    res = db.session.query(Group_member).filter(Group_member.user_id == user_id, Group_member.group_id == group_id).one_or_none()
+
+    return res
+
+def get_group_members(group_id: int):
+    res = db.session.query(Group_member).filter_by(group_id=group_id).all()
+
+    return res
+
+def leave_member(user_id: int, group_id: int):
+    member = get_member(user_id, group_id)
+
+    try:
+        db.session.delete(member)
+        db.session.commit()
+        return True
+    except:
+        return False
+
+
+def delete_group_member(author_id: int, group_id: int, user_id: int):
+    group = get_member(author_id, group_id)
+
+    if group is None:
+        return False
+
+    if group.admin == group_id:
+        return False
+    
+    leave_member(user_id, group_id)
+    return True
+    
+
+
+
+def create_group(name: str, author: int, ip: str, key: bool):
+    g = Group(network_name=name, author_id=author, ip=ip, encryting=key)
+    db.session.add(g)
+
+    # Try to commit, and return True if sucsess
+    try:
+        db.session.commit()
+        add_member(author, g.id, admin=g.id)
+        return True, 'Record added success', g.id
+    
+    except Exception as e:
+        db.session.reset()
+        return False, e
+    
 def get_groups(user_id: int):
     groups = db.session.query(Group_member).filter_by(user_id=user_id).all()
 
@@ -45,61 +97,23 @@ def get_group(group_id: int):
     group = db.session.query(Group).filter_by(id=group_id).one_or_none()
 
     return group
-
-def get_member(user_id: int, group_id: int):
-    res = db.session.query(Group_member).filter(Group_member.user_id == user_id, Group_member.group_id == group_id).one_or_none()
-
-    print(res)
-
-    if res:
-        return True
-    return False
-
-def get_group_members(group_id: int):
-    res = db.session.query(Group_member).filter_by(group_id=group_id).all()
-
-    return res
-
-def search_ip(group_id: int, ip: str) -> bool: 
-    res = db.session.query(Group_member).filter(Group_member.ip == ip, Group_member.group_id == group_id).one_or_none()
-
-    if res is None:
-        return False
-    return True
-
-def create_group(name: str, author: int, ip: str, key: bool):
-    g = Group(network_name=name, author_id=author, ip=ip, encryting=key)
-    db.session.add(g)
-
-    # Try to commit, and return True if sucsess
-    try:
-        db.session.commit()
-        add_member(author, g.id, admin=True)
-        return True, 'Record added success', g.id
-    
-    except Exception as e:
-        db.session.reset()
-        return False, e
     
 def delete_group_db(user_id: int, group_id: int):
     group = get_group(group_id)
-    # members = get_group_members(group_id)
 
     if user_id == group.author_id:
         db.session.delete(group)
-        # for i in members:
-        #     db.session.delete(i)
         db.session.commit()
         return True
     return False
 
     
-def add_member(user_id: int, group_id: int, admin=False):
+def add_member(user_id: int, group_id: int, admin=None):
     group = get_group(group_id)
 
     member = get_member(user_id, group_id)
 
-    if member is True:
+    if member:
         return False
 
     ip = gen_ip(group.ip, group_id)
@@ -115,3 +129,11 @@ def add_member(user_id: int, group_id: int, admin=False):
     except Exception as e:
         db.session.reset()
         return False
+    
+
+def search_ip(group_id: int, ip: str) -> bool: 
+    res = db.session.query(Group_member).filter(Group_member.ip == ip, Group_member.group_id == group_id).one_or_none()
+
+    if res is None:
+        return False
+    return True
