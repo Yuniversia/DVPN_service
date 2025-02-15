@@ -1,4 +1,3 @@
-```markdown
 # DVPN Service
 
 ## English
@@ -152,14 +151,3 @@ python run.py
 ### Примечания
 - Пользователи с включенным шифрованием содержат поле `crypto`
 - Основная логика приложения после регистрации: `domain/person`
-```
-
-This README includes:
-1. Bilingual documentation (English/Russian)
-2. Clear configuration instructions
-3. API usage examples
-4. Response structure explanation
-5. Differentiated encryption status display
-6. Requirements and installation steps
-7. Sample responses with/without crypto
-8. Environment setup guidance
