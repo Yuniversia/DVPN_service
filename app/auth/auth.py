@@ -152,12 +152,10 @@ def token():
     group_id = data['group_id']
 
     res = create_token(current_user.id, group_id)
-    return Response(
-        res,
-        mimetype='text/plain',
-        headers={
-            'Content-Disposition': 'attachment; filename="token.txt"'
-        })
+    try:
+        return res
+    except:
+        return "Ошибка при получении токена", 404
 
 @auth.route('/person')
 @login_required
@@ -207,12 +205,7 @@ def invite_create():
 
     res = create_group_link(current_user.id, group_id, minutes, invites_count)
 
-    return Response(
-        f"{os.getenv('DOMAIN_URL')}{res}",
-        mimetype='text/plain',
-        headers={
-            'Content-Disposition': 'attachment; filename="url.txt"'
-        })
+    return f"{os.getenv('DOMAIN_URL')}{res}"
 
 @auth.route('/token/<token>')
 @login_required
@@ -240,10 +233,13 @@ def invite(token):
 @auth.route('/peers', methods=['POST'])
 def peer_id():
     data = request.form
-    token = data['token']
+    try:
+        token = data['token']
 
-    res = get_group_peer(token)
-    return jsonify(res)
+        res = get_group_peer(token)
+        return jsonify(res)
+    except:
+        return "Токен не был передан", 400
     
 @auth.route("/favicon.ico")
 def icon():

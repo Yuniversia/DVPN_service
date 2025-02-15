@@ -68,7 +68,9 @@ def add_member(user_id: int, group_id: int, admin=None):
         db.session.commit()
 
         if group.encryting is True:
-            m.key = base64.encodebytes(os.urandom(32)).decode()
+            key = base64.encodebytes(os.urandom(32)).decode()
+            key = key.replace("\n", '')
+            m.key = key
             db.session.commit()
 
         return True
@@ -107,8 +109,11 @@ def create_group(name: str, author: int, ip: str, key: bool):
 
     # Try to commit, and return True if sucsess
     try:
-        db.session.commit()
-        add_member(author, g.id, admin=g.id)
+        db.session.flush()
+        res = add_member(author, g.id, admin=g.id)
+        if res is False:
+            db.session.reset()
+            return False
         return True, 'Record added success', g.id
     
     except Exception as e:
@@ -146,6 +151,7 @@ def user_encrypting(user_id: int, group_id: int, encrypting: bool):
 
     if encrypting is True and member.key is None:
         key = base64.encodebytes(os.urandom(32)).decode()
+        key = key.replace("\n", '')
 
         member.key = key
         db.session.commit()

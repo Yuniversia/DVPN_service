@@ -416,9 +416,24 @@
                 </div>
                 <a href="#" class="modal-overlay"></a>
 
+                <!-- Delete modal -->
+
                 {% if user.id == members_group.group.author_id %}
-                <form action="/group/del" method="post"  style="display: contents;">
-                <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
+                    <div id="delete-{{ members_group.group.network_name }}" class="modal">
+                        <h2 style="margin-bottom: 1.5rem;">Вы точно хотите выйти?</h2>
+                        <form method="post" action="/group/del">
+                            <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
+                            <div class="form-group" style="display: flex;">
+                                <a href="#" class="token-group-btn">Нет</a>
+                                <input class="delete-group-btn" type="submit" value="Удалить группу" style="margin-left: 0.5rem;">
+                            </div>
+                        </form>
+                    </div>
+                    <a href="#" class="modal-overlay"></a>
+                {% endif %}
+
+                {% if user.id == members_group.group.author_id %}
+                <form action="#delete-{{ members_group.group.network_name }}" method="get"  style="display: contents;">
                 <input class="delete-group-btn" type="submit" value="Удалить группу">
                 </form>
                 {% else %}
