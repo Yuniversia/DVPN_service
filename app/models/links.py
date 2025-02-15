@@ -62,7 +62,11 @@ def get_group_peer(token: str):
 
     for member in members:
         member_json = dict(name=member.user.name, id=member.usr_uuid,
-                            addr=member.ip, key=member.key)
+                            addr=member.ip)
+        
+        if member.key is not None:
+            member_json.update({"crypto": {"key": f"{member.key}"}})
+
         peer_list.append(member_json)
 
     return peer_list

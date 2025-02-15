@@ -207,6 +207,17 @@
             margin-bottom: 1rem;
         }
 
+        .encrypt_switcher {
+            display: flex;
+        }
+
+        .encrypt_switcher input {
+            display: block;
+            align-items: center;
+            margin-right: 0.1rem;
+
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
@@ -270,6 +281,8 @@
     <h2 style="color: #dc3545; align-items: center; text-align: center; margin-top: 20px;"  >{{ msg }}</h2>
     {% endif %}
     {% endfor %}
+
+
     <h1 style="margin: 2rem auto; padding: 0 2rem; color: #1877f2;">Пользователь: {{user.name}}</h1>
     {% for members_group in groups %}
     <div class="groups-container">
@@ -282,17 +295,21 @@
             
             <div class="group-content">
                 <table class="group-table">
-                    <thead>
+                    <thead style="overflow-x: scroll;">
                         <tr>
                             <th>ID</th>
                             <th>Имя</th>
                             <th>IP-адрес</th>
+                            <th>Шифрование</th>
                             {% if user.id == members_group.group.author_id %}
-                            <th>Действия</th>
+                            <th>Удаление</th>
                             {% endif %}
                         </tr>
                     </thead>
                     <tbody>
+
+                        <!-- Creating table with variables -->
+
                         {% for member in group_member(members_group.group_id) %}
                         <tr>
                             {% if member.user_id == members_group.group.author_id %}
@@ -303,7 +320,35 @@
                             <td>{{ member.user_id }}</td>
                             <td>{{ member.user.name }}</td>
                             <td>{{ member.ip }}</td>
+			                {% endif %}
+
+                            <!-- Cheking user before add encrypt -->
+                            {% if members_group.group.encryting == 1 %}
+                            <td><p>Auto</p></td>
+                            {% else %}
+                                {% if user.id == member.user_id %}
+                                <td><form method="post" action="/encrypt">
+                                    {{ encrypt_form.hidden_tag() }}
+                                    <input type="hidden" name="group_id" value="{{ member.group_id }}">
+                                    {% if member.key %}
+                                    <label class="encrypt_switcher">
+                                    {{ encrypt_form.encrypt_switcher(checked=True) }}
+                                        Шифрование
+                                    </label>
+                                    {% else %}
+                                    <label class="encrypt_switcher">
+                                        {{ encrypt_form.encrypt_switcher() }}
+                                        Шифрование
+                                    </label>
+                                    {% endif %}
+                                </form></td>
+
+                                {% else %}
+                                    <td><p>False</p></td>
+                                {% endif %}
                             {% endif %}
+
+
                             {% if user.id == members_group.group.author_id and  member.user_id != members_group.group.author_id %}
                             <td>
                                 <form action="/group/del_member" method="post"  style="display: contents;">
@@ -314,6 +359,7 @@
                             </td>
                             {% endif %}
                         </tr>
+                        <!-- End "group" for -->
                         {% endfor %}
                     </tbody>
                 </table>
@@ -336,9 +382,8 @@
         </div>
     </div>
     {% endfor %}
-    <!-- Список групп -->
 
-    <!-- Модальное окно создания группы -->
+    <!-- Windows for creating group -->
     <div id="create-group" class="modal">
         <h2 style="margin-bottom: 1.5rem;">Создать группу</h2>
         <form method="post" action="/group">
@@ -364,10 +409,9 @@
             </div>
             <div class="form-group checkbox-group">
                 {{ group_form.encrypt_key() }}
-                <label for="encryption">Шифрование</label>
+                <label for="encryption">Обязательное шифрование</label>
             </div>
             <div class="form-group">
-                <!-- <a href="#" class="nav-btn" style="width: 100%; text-align: center;">Создать</a> -->
                  <input type="submit" placeholder="Создать" style="background-color: #1877f2; color: white;">
             </div>
         </form>

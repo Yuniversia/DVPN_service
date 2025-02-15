@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, BooleanField, SubmitField, PasswordField
+from wtforms import StringField, BooleanField, SubmitField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 
 class Sign_inForm(FlaskForm):
@@ -18,3 +18,7 @@ class GroupForm(FlaskForm):
     network_name = StringField("Network name", validators=[DataRequired()])
     ip = StringField("IP", validators=[DataRequired()], render_kw={"placeholder": "192.168.0.1/24"})
     encrypt_key = BooleanField("Encrypting", default=False)
+
+class EncryptForm(FlaskForm):
+    hidden_group_id = HiddenField('Hidden')
+    encrypt_switcher = BooleanField("Encrypting", default=False, render_kw={"onclick": "this.form.submit()"} )

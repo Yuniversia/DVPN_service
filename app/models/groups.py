@@ -1,5 +1,7 @@
 import uuid
 import datetime
+import os
+import base64
 
 from .ext import db
 from app.validation import gen_ip
@@ -64,6 +66,11 @@ def add_member(user_id: int, group_id: int, admin=None):
     # Try to commit, and return True if sucsess
     try:
         db.session.commit()
+
+        if group.encryting is True:
+            m.key = base64.encodebytes(os.urandom(32)).decode()
+            db.session.commit()
+
         return True
     
     except Exception as e:
@@ -118,7 +125,7 @@ def get_group(group_id: int):
 
     return group
     
-def delete_group_db(user_id: int, group_id: int):
+def delete_group_db(user_id: int, group_id: int) -> bool:
     group = get_group(group_id)
 
     if user_id == group.author_id:
@@ -127,11 +134,27 @@ def delete_group_db(user_id: int, group_id: int):
         return True
     return False
 
-    
-
 def search_ip(group_id: int, ip: str) -> bool: 
     res = db.session.query(Group_member).filter(Group_member.ip == ip, Group_member.group_id == group_id).one_or_none()
 
     if res is None:
         return False
     return True
+
+def user_encrypting(user_id: int, group_id: int, encrypting: bool):
+    member = get_member(user_id, group_id)
+
+    if encrypting is True and member.key is None:
+        key = base64.encodebytes(os.urandom(32)).decode()
+
+        member.key = key
+        db.session.commit()
+        return True
+
+    if encrypting is False and member.key is not None:
+        member.key = None
+        db.session.commit()
+        return True
+    
+    return False
+

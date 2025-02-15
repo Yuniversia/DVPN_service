@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 import os
 
 
-from .forms import Sign_inForm, Sign_upForm, GroupForm
+from .forms import Sign_inForm, Sign_upForm, GroupForm, EncryptForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
 from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group, delete_group_member, leave_member, get_group_peer
-from app.models import create_token
+from app.models import create_token, user_encrypting
 from app.validation import check_ip
 
 from flask_login import login_required, logout_user, login_user, current_user
@@ -103,10 +103,10 @@ def group():
             return redirect(url_for("auth.person"))
         
         flash("Это имя группы не уникально", "name")
-        return redirect(url_for("auth.person"))
+        return redirect(url_for("auth.person") + "#create-group")
     
     flash("Не правильный формат IP", "ip")
-    return redirect(url_for("auth.person"))
+    return redirect(url_for("auth.person") + "#create-group")
 
 @auth.route('/group/del', methods=["POST"])
 @login_required
@@ -176,10 +176,24 @@ def token():
 def person():
     group = get_groups(current_user.id)
     group_form = GroupForm()
+    encrypt_form = EncryptForm()
     return render_template('prof.html', user=current_user, 
-                           group_form=group_form, groups=group, group_member=get_group_members)
+                           group_form=group_form, encrypt_form=encrypt_form,
+                            groups=group, group_member=get_group_members)
 
-@auth.route('/peer_id', methods=['POST'])
+@auth.route("/encrypt", methods=['POST'])
+@login_required
+def encrypt_switcher():
+    encrypt_form = EncryptForm()
+    key = encrypt_form.encrypt_switcher.data
+
+    data = request.form
+    group_id = data['group_id']
+    user_encrypting(current_user.id, group_id, key)
+
+    return redirect(url_for("auth.person"))
+
+@auth.route('/peers', methods=['POST'])
 def peer_id():
     data = request.form
     token = data['token']
