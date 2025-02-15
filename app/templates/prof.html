@@ -92,6 +92,7 @@
             display: none;
             padding: 1rem;
             border-top: 1px solid #eee;
+            overflow-x: scroll;
         }
 
         .group-table {
@@ -199,6 +200,15 @@
             z-index: 999;
         }
 
+        .time-inputs select{
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
         .modal:target + .modal-overlay {
             display: block;
         }
@@ -289,7 +299,7 @@
         <div class="group-item">
             <input type="checkbox" id="group{{loop.index}}">
             <label class="group-header" for="group{{loop.index}}">
-                <span>{{ members_group.group.network_name }} | {{ members_group.group_id }}</span>
+                <span>{{ members_group.group.network_name }}</span>
                 <span>▶</span>
             </label>
             
@@ -344,7 +354,11 @@
                                 </form></td>
 
                                 {% else %}
-                                    <td><p>False</p></td>
+                                    {% if member.key %}
+                                        <td><p>True</p></td>
+                                    {% else %}
+                                        <td><p>False</p></td>
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
 
@@ -363,10 +377,45 @@
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <a href="#{{ members_group.group.network_name }}" style="padding: 0.65rem 1.5rem" class="nav-btn">Приглашение</a>
+
                 <form action="/token" method="post"  style="display: contents;">
                 <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
                 <input class="token-group-btn" type="submit" value="Создать токен">
                 </form>
+
+                <!-- Adding links -->
+
+                <div id="{{ members_group.group.network_name }}" class="modal">
+                    <h2 style="margin-bottom: 1.5rem;">Приглашение</h2>
+                    <form method="post" action="/invite">
+                        <div class="form-group">
+                            <label>Временной промежуток</label>
+                            <div class="time-inputs">
+                                <select name="time_unit" required>
+                                    <option value="minutes">Минуты</option>
+                                    <option value="hours">Часы</option>
+                                    <option value="days">Дни</option>
+                                </select>
+                                <input type="number" name="time_amount" min="1" required placeholder="Количество">
+                            </div>
+                            <span class="hint">Пример: 2 часа</span>
+                        </div>
+                
+                        <div class="form-group">
+                            <label>Количество приглашений</label>
+                            <input type="number" name="invites_count" min="1" required placeholder="Максимальное число использований">
+                            <span class="hint">Максимальное допустимое количество использований</span>
+                        </div>
+                        <div class="form-group">
+                            <input type="hidden" name="group_id" value="{{ members_group.group_id }}">
+                            <input type="submit" value="Создать" style="background-color: #1877f2; color: white;">
+                        </div>
+                    </form>
+                </div>
+                <a href="#" class="modal-overlay"></a>
+
                 {% if user.id == members_group.group.author_id %}
                 <form action="/group/del" method="post"  style="display: contents;">
                 <input type="hidden" name="group_id" value="{{ members_group.group_id }}">

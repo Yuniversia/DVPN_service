@@ -6,7 +6,7 @@ import os
 from .forms import Sign_inForm, Sign_upForm, GroupForm, EncryptForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
 from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group, delete_group_member, leave_member, get_group_peer
-from app.models import create_token, user_encrypting
+from app.models import create_token, user_encrypting, cleanup_links, create_group_link, get_token_link, delete_token_link, add_used_count
 from app.validation import check_ip
 
 from flask_login import login_required, logout_user, login_user, current_user
@@ -138,24 +138,6 @@ def leave_member_():
     res = leave_member(current_user.id, group_id)
     return redirect(url_for("auth.person"))
 
-@auth.route('/token/<group_id>')
-@login_required
-def invite(group_id):
-
-    if get_group(group_id):
-
-        user_id = current_user.id
-
-        res = add_member(user_id, group_id, admin=False)
-        if res:
-            return redirect(url_for("auth.person"))
-
-        flash("Вы уже состоите в этой группе или произошла ошибка", "main")
-        return redirect(url_for("auth.person"))
-    
-    flash("Пошёл нахуй, такой группы нет", "main")
-    return redirect(url_for("auth.person"))
-
 @auth.route('/token', methods=['POST'])
 @login_required
 def token():
@@ -192,6 +174,62 @@ def encrypt_switcher():
     user_encrypting(current_user.id, group_id, key)
 
     return redirect(url_for("auth.person"))
+
+@auth.before_request
+def cleanup_expired_links():
+    # Удаляем просроченные ссылки перед каждым запросом
+    cleanup_links()
+
+@auth.route("/invite", methods=['POST'])
+@login_required
+def invite_create():
+
+    data = request.form
+    group_id = data['group_id']
+    time_unit = data['time_unit']
+    time_amount = data['time_amount']
+    invites_count = data['invites_count']
+
+    if time_unit == 'minutes':
+        minutes = int(time_amount)
+
+    if time_unit == 'hours':
+        minutes = int(time_amount) * 60
+
+    if time_unit == 'days':
+        minutes = int(time_amount) * 60 * 24
+
+    res = create_group_link(current_user.id, group_id, minutes, invites_count)
+
+    return Response(
+        f"{os.getenv('DOMAIN_URL')}{res}",
+        mimetype='text/plain',
+        headers={
+            'Content-Disposition': 'attachment; filename="url.txt"'
+        })
+
+@auth.route('/token/<token>')
+@login_required
+def invite(token):
+
+    link = get_token_link(token)
+
+    if not link:
+        return 'Ссылка не найдена или просрочена', 404
+
+    if link.is_expired():
+        delete_token_link(link)
+        return 'Ссылка просрочена', 410
+
+    if not link.has_uses_left():
+        delete_token_link(link)
+        return 'Закончилось количество использований', 410
+
+    add_used_count(link)
+
+    add_member(current_user.id, link.group_id)
+    return redirect(url_for("auth.person"))
+
 
 @auth.route('/peers', methods=['POST'])
 def peer_id():
