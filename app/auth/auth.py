@@ -205,7 +205,7 @@ def invite_create():
 
     res = create_group_link(current_user.id, group_id, minutes, invites_count)
 
-    return f"{os.getenv('DOMAIN_URL')}{res}"
+    return f"{request.url_root}{res}"
 
 @auth.route('/token/<token>')
 @login_required

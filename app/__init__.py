@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 from flask import Flask
 
-load_dotenv()
+load_dotenv() # Load configs from .env file
 
 def get_app():
     app = Flask(__name__, template_folder="../templates", static_folder="../static")
