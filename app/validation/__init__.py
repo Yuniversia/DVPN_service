@@ -1,1 +1,1 @@
-from .validation import check_ip, gen_ip
+from .validation import check_ip, gen_ip, is_valid_name

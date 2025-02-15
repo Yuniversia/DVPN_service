@@ -7,7 +7,7 @@ from .forms import Sign_inForm, Sign_upForm, GroupForm, EncryptForm
 from app.models import crt_usr, get_usr, get_psw, login_manager
 from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group, delete_group_member, leave_member, get_group_peer
 from app.models import create_token, user_encrypting, cleanup_links, create_group_link, get_token_link, delete_token_link, add_used_count
-from app.validation import check_ip
+from app.validation import check_ip, is_valid_name
 
 from flask_login import login_required, logout_user, login_user, current_user
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash, Response
@@ -36,9 +36,15 @@ def sign_up():
 
         res = crt_usr(name, email, psw)
 
+        check_name = is_valid_name(name)
+
+        if check_name is False:
+            flash("Имя не может соддержать спецальных символов")
+            return redirect(url_for('auth.index') + "#signup"), 302
+
         if not res[0]:
-            flash("Nickname is not unique"), 500
-            return redirect(url_for('auth.index')), 302
+            flash("Имя не уникальное"), 500
+            return redirect(url_for('auth.index') + "#signup"), 302
 
         login_user(get_usr(name), duration=timedelta(hours=int(os.getenv('LOGIN_TIME'))))
         return redirect(url_for('auth.person')), 302
