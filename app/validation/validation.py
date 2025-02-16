@@ -7,16 +7,13 @@ def check_ip(ip: str) -> bool:
     except ValueError:
         return False
     
-def gen_ip(ip: str, group_id: int) -> str:
+def gen_ip(user_ip: str, group_id: int) -> str:
 
     from app.models import search_ip
-    ips = ipaddress.ip_network(ip, strict=False)
-    ip_list = list(ips)
 
-    ip_list.remove(ips.network_address)
-    ip_list.remove(ips.broadcast_address)
+    net = ipaddress.ip_network(user_ip, strict=False)
 
-    for ip_ in ip_list:
+    for ip_ in filter(lambda ip: ip != net.network_address or ip != net.broadcast_address, net):
         if not search_ip(group_id, str(ip_)):
             return str(ip_)
         
