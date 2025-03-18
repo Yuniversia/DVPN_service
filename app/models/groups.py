@@ -39,48 +39,85 @@ class Group_member(db.Model):
     group = relationship("Group", back_populates="group_member", foreign_keys=[group_id])
     user = relationship("User", backref="group_member")
 
+class Group_command:
+    
 
-def get_member(user_id: int, group_id: int):
-    res = db.session.query(Group_member).filter(Group_member.user_id == user_id, Group_member.group_id == group_id).one_or_none()
+    @staticmethod
+    def get_group(group_id: int):
+        group = db.session.query(Group).filter_by(id=group_id).one_or_none()
 
-    return res
+        return group
 
-def get_group_members(group_id: int):
-    res = db.session.query(Group_member).filter_by(group_id=group_id).all()
+    # Functions for group_member
 
-    return res
+    @staticmethod
+    def get_group_member(user_id: int, group_id: int):
+        res = db.session.query(Group_member).filter(Group_member.user_id == user_id, Group_member.group_id == group_id).one_or_none()
 
-def add_member(user_id: int, group_id: int, admin=None):
-    group = get_group(group_id)
+        return res
+    
+    @staticmethod
+    def get_group_members(group_id: int):
+        res = db.session.query(Group_member).filter_by(group_id=group_id).all()
 
-    member = get_member(user_id, group_id)
-
-    if member:
-        return False
-
-    ip = gen_ip(group.ip, group_id)
-
-    m = Group_member(user_id=user_id, group_id=group_id ,ip=ip, admin=admin)
-    db.session.add(m)
-
-    # Try to commit, and return True if sucsess
-    try:
+        return res
+    
+    @staticmethod
+    def add_group_member(user_id: int, group_id: int ,ip: str, admin: bool, key: str):
+        res = Group_member(user_id=user_id, group_id=group_id ,ip=ip, admin=admin, key=key)
+        db.session.add(res)
         db.session.commit()
 
-        if group.encryting is True:
-            key = base64.encodebytes(os.urandom(32)).decode()
-            key = key.replace("\n", '')
-            m.key = key
-            db.session.commit()
-
-        return True
+        return res
     
-    except Exception as e:
-        db.session.reset()
-        return False
+    @staticmethod
+    def get_usr_groups(user_id: int):
+        groups = db.session.query(Group_member).filter_by(user_id=user_id).all()
+
+        return groups
+
+
+# def get_member(user_id: int, group_id: int):
+#     res = db.session.query(Group_member).filter(Group_member.user_id == user_id, Group_member.group_id == group_id).one_or_none()
+
+#     return res
+
+# def get_group_members(group_id: int):
+#     res = db.session.query(Group_member).filter_by(group_id=group_id).all()
+
+#     return res
+
+# def add_member(user_id: int, group_id: int, admin=None):
+#     group = get_group(group_id)
+
+#     member = get_member(user_id, group_id)
+
+#     if member:
+#         return False
+
+#     ip = gen_ip(group.ip, group_id)
+
+#     m = Group_member(user_id=user_id, group_id=group_id ,ip=ip, admin=admin)
+#     db.session.add(m)
+
+#     # Try to commit, and return True if sucsess
+#     try:
+#         db.session.commit()
+
+#         if group.encryting is True:
+#             key = base64.encodebytes(os.urandom(32)).decode()
+#             key = key.replace("\n", '')
+#             m.key = key
+#             db.session.commit()
+
+#         return True
+    
+#     except Exception as e:
+#         db.session.reset()
+#         return False
 
 def leave_member(user_id: int, group_id: int):
-    member = get_member(user_id, group_id)
+    member = Group_command.add_group_member(user_id, group_id)
 
     try:
         db.session.delete(member)
@@ -91,7 +128,7 @@ def leave_member(user_id: int, group_id: int):
 
 
 def delete_group_member(author_id: int, group_id: int, user_id: int):
-    group = get_member(author_id, group_id)
+    group = Group_command.get_group_member(author_id, group_id)
 
     if group is None:
         return False
@@ -110,7 +147,7 @@ def create_group(name: str, author: int, ip: str, key: bool):
     # Try to commit, and return True if sucsess
     try:
         db.session.flush()
-        res = add_member(author, g.id, admin=g.id)
+        res = Group_command.get_group_member(author, g.id, admin=g.id)
         if res is False:
             db.session.reset()
             return False
@@ -147,7 +184,7 @@ def search_ip(group_id: int, ip: str) -> bool:
     return True
 
 def user_encrypting(user_id: int, group_id: int, encrypting: bool):
-    member = get_member(user_id, group_id)
+    member = Group_command.get_group_member(user_id, group_id)
 
     if encrypting is True and member.key is None:
         key = base64.encodebytes(os.urandom(32)).decode()

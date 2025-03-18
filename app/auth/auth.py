@@ -4,13 +4,15 @@ import os
 
 
 from .forms import Sign_inForm, Sign_upForm, GroupForm, EncryptForm
+from app.validation import gen_ip
 from app.models import crt_usr, get_usr, get_psw, login_manager
 from app.models import get_groups, create_group, add_member, get_group_members, delete_group_db, get_group, delete_group_member, leave_member, get_group_peer
-from app.models import create_token, user_encrypting, cleanup_links, create_group_link, get_token_link, delete_token_link, add_used_count
+from app.models import create_token, user_encrypting, cleanup_links, create_group_link, get_token_link, delete_token_link, add_used_count, Group_command
 from app.validation import check_ip, is_valid_name
 
 from flask_login import login_required, logout_user, login_user, current_user
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect, flash, Response
+import base64
 
 load_dotenv()
 
@@ -18,7 +20,7 @@ login_manager.login_view = 'auth.index'
 
 auth = Blueprint('auth', __name__, template_folder="../templates", static_folder="../static")
 
-@auth.route("/")
+@auth.route("/", methods=['GET'])
 def index():
 
     sign_in = Sign_inForm()
@@ -157,7 +159,7 @@ def token():
     except:
         return "Ошибка при получении токена", 404
 
-@auth.route('/person')
+@auth.route('/person', methods=['GET'])
 @login_required
 def person():
     group = get_groups(current_user.id)
@@ -184,6 +186,49 @@ def cleanup_expired_links():
     # Удаляем просроченные ссылки перед каждым запросом
     cleanup_links()
 
+@auth.route('/invite/<token>', methods=['GET'])
+@login_required
+def invite(token):
+
+    link = get_token_link(token)
+
+    if not link:
+        return 'Ссылка не найдена или просрочена', 404
+
+    if link.is_expired():
+        delete_token_link(link)
+        return 'Ссылка просрочена', 410
+
+    if not link.has_uses_left():
+        delete_token_link(link)
+        return 'Закончилось количество использований', 410
+
+    add_used_count(link)
+
+    # Adding member to group
+    
+    group = Group_command.get_group(link.group_id)
+
+    member = Group_command.get_group_member(current_user.id, link.group_id)
+
+    if member:
+        return False
+    
+
+    key = None
+    if group.encryting is True:    
+        key = base64.encodebytes(os.urandom(32)).decode()
+        key = key.replace("\n", '')
+
+
+    ip = gen_ip(group.ip, link.group_id)
+
+    try:
+        Group_command.add_group_member(current_user.id, link.group_id, ip, False, key)
+        return redirect(url_for("auth.person")), 500
+    except:
+        return redirect(url_for("auth.person")), 302
+
 @auth.route("/invite", methods=['POST'])
 @login_required
 def invite_create():
@@ -205,30 +250,7 @@ def invite_create():
 
     res = create_group_link(current_user.id, group_id, minutes, invites_count)
 
-    return f"{request.url_root}{res}"
-
-@auth.route('/token/<token>')
-@login_required
-def invite(token):
-
-    link = get_token_link(token)
-
-    if not link:
-        return 'Ссылка не найдена или просрочена', 404
-
-    if link.is_expired():
-        delete_token_link(link)
-        return 'Ссылка просрочена', 410
-
-    if not link.has_uses_left():
-        delete_token_link(link)
-        return 'Закончилось количество использований', 410
-
-    add_used_count(link)
-
-    add_member(current_user.id, link.group_id)
-    return redirect(url_for("auth.person"))
-
+    return f"{request.url_root}/invite/{res}"
 
 @auth.route('/peers', methods=['POST'])
 def peer_id():
