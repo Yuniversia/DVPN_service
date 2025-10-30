@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVPN - Децентрализованная VPN Панель</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'vpn_app/files/logo.svg' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/login_styles.css' %}"> 
+    <style>
+        /* Дополнительные стили для главной страницы */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .main-header {
+            width: 100%;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--dash-bg-medium);
+            border-bottom: 1px solid var(--dash-border-color);
+        }
+        .main-header .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dash-text-light);
+        }
+        .main-header .logo .product-name-accent {
+            color: var(--dash-purple-primary);
+        }
+        .main-header .nav-buttons .auth-button {
+            margin-left: 1rem;
+            padding: 0.6rem 1.2rem;
+        }
+
+        .hero-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .hero-section h1 {
+            font-size: 2.5rem;
+            color: var(--dash-text-light);
+            margin-bottom: 1rem;
+        }
+        .hero-section h1 .highlight {
+            color: var(--dash-purple-primary);
+        }
+        .hero-section p {
+            font-size: 1.1rem;
+            color: var(--dash-text-medium);
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .downloads-section {
+            width: 100%;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--dash-bg-medium);
+            border-radius: 0.5rem;
+        }
+        .downloads-section h2 {
+            text-align: center;
+            color: var(--dash-text-light);
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+        }
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .download-card {
+            background-color: var(--dash-bg-dark);
+            padding: 1.5rem;
+            border-radius: 0.375rem;
+            border: 1px solid var(--dash-border-color);
+            text-align: center;
+        }
+        .download-card .icon-large {
+            font-size: 2.5rem;
+            color: var(--dash-purple-light);
+            margin-bottom: 1rem;
+        }
+        .download-card h3 {
+            font-size: 1.2rem;
+            color: var(--dash-text-light);
+            margin-bottom: 0.5rem;
+        }
+        .download-card .auth-button {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .download-card .auth-button.secondary {
+             background-color: var(--dash-bg-medium);
+             border: 1px solid var(--dash-purple-primary);
+             color: var(--dash-purple-light);
+        }
+        .download-card .auth-button.secondary:hover {
+            background-color: var(--dash-purple-dark);
+        }
+    </style>
+</head>
+<body class="login-page-body">
+
+    <header class="main-header">
+        <div class="logo">DVPN <span class="product-name-accent">Control Panel</span></div>
+        <div class="nav-buttons">
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="auth-button">
+                    <i class="fas fa-tachometer-alt icon-left"></i>Панель
+                </a>
+            {% else %}
+                <a href="{% url 'login_register_page' %}" class="auth-button">
+                    <i class="fas fa-sign-in-alt icon-left"></i>Вход
+                </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="hero-section">
+        <h1>Добро пожаловать в <span class="highlight">DVPN</span></h1>
+        <p>Создавайте безопасные, децентрализованные частные сети с легкостью. Управляйте своими группами и участниками через простую веб-панель.</p>
+        
+        <div class="downloads-section">
+            <h2><i class="fas fa-download icon-left"></i>Загрузки DVPN Клиента</h2>
+            <div class="download-grid">
+                
+                <div class="download-card">
+                    <i class="fab fa-windows icon-large"></i>
+                    <h3>Windows</h3>
+                    <a href="{{ dvpn_win_path }}" class="auth-button" download>
+                        <i class="fas fa-download icon-left"></i>Скачать (x64)
+                    </a>
+                </div>
+                
+                <div class="download-card">
+                    <i class="fab fa-linux icon-large"></i>
+                    <h3>Linux (Ubuntu)</h3>
+                    <a href="{{ dvpn_ubuntu_path }}" class="auth-button" download>
+                        <i class="fas fa-download icon-left"></i>Скачать (Ubuntu)
+                    </a>
+                </div>
+
+                <div class="download-card">
+                    <i class="fab fa-linux icon-large"></i>
+                    <h3>Linux (CLI)</h3>
+                    <a href="{{ dvpn_amd_path }}" class="auth-button secondary" download>
+                        <i class="fas fa-download icon-left"></i>Скачать (AMD64)
+                    </a>
+                    <a href="{{ dvpn_arm_path }}" class="auth-button secondary" download>
+                        <i class="fas fa-download icon-left"></i>Скачать (ARM64)
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

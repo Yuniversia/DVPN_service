@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Присоединиться к группе - DVPN</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'vpn_app/files/logo.svg' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/login_styles.css' %}">
+    <style>
+        .join-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--dash-bg-medium);
+            padding: 2.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--dash-border-color);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .join-container h2 {
+            color: var(--dash-text-light);
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+        .join-container h2 .icon-left {
+            color: var(--dash-purple-light);
+            margin-right: 0.75rem;
+        }
+        .join-container .group-question {
+            color: var(--dash-text-medium);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .join-container .group-question strong {
+            color: var(--dash-text-light);
+            font-weight: 600;
+        }
+        .info-box {
+            background-color: var(--dash-bg-dark);
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            color: var(--dash-text-medium);
+            font-size: 0.95rem;
+        }
+        .info-item:not(:last-child) {
+            margin-bottom: 1rem;
+        }
+        .info-item .icon-left {
+            color: var(--dash-purple-light);
+            width: 30px;
+            font-size: 1rem;
+        }
+        .info-item strong {
+            color: var(--dash-text-light);
+            margin-left: 0.5rem;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .auth-button.secondary {
+            background-color: var(--dash-bg-medium);
+            border: 1px solid var(--dash-border-color);
+            color: var(--dash-text-medium);
+        }
+        .auth-button.secondary:hover {
+            background-color: var(--dash-bg-dark);
+            border-color: var(--dash-text-medium);
+        }
+    </style>
+</head>
+<body class="login-page-body">
+
+    <div class="join-container">
+        <h2><i class="fas fa-user-plus icon-left"></i>Присоединение к группе</h2>
+        <p class="group-question">Вы уверены, что хотите присоединиться к группе <strong>{{ group.name }}</strong>?</p>
+        
+        <div class="info-box">
+            <div class="info-item">
+                <i class="fas fa-users icon-left"></i>
+                Количество участников: <strong>{{ member_count }}</strong>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-user-shield icon-left"></i>
+                Создатель группы: <strong>{{ creator.username }}</strong>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-calendar-alt icon-left"></i>
+                Дата создания: <strong>{{ group.creator.date_joined|date:"Y-m-d" }}</strong>
+            </div>
+        </div>
+
+        <form id="join-group-form" action="{% url 'join_group_url' id=link_id %}" onsubmit="event.preventDefault(); sendForm('join-group-form', 'POST')">
+            {% csrf_token %}
+            <input type="hidden" name="link_id" value="{{ link_id }}">
+            <div id="None-message"></div> <div class="action-buttons">
+                <button type="submit" class="auth-button">
+                    <i class="fas fa-check icon-left"></i>Присоединиться
+                </button>
+                <a href="{% url 'dashboard' %}" class="auth-button secondary" style="text-decoration: none;">
+                    <i class="fas fa-times icon-left"></i>Отмена
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+    <script src="{% static 'vpn_app/js/script.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход и Регистрация - DVPN</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'vpn_app/files/logo.svg' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/login_styles.css' %}">
+</head>
+<body class="login-page-body">
+
+    <div class="login-container">
+        <div class="login-toggle">
+            <button id="show-login-btn" class="active">Вход</button>
+            <button id="show-register-btn">Регистрация</button>
+        </div>
+
+        <form id="login-form" class="auth-form active-form" action="{% url 'login_user_url' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" onsubmit="event.preventDefault(); sendForm('login-form', 'POST')">
+            {% csrf_token %}
+            <h2>Вход в DVPN</h2>
+            <div class="form-group">
+                <label for="login-username"><i class="fas fa-user icon-left"></i>Ник или Почта</label>
+                <input type="text" id="login-username" name="username_or_email" required>
+                <div id="login-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="login-password"><i class="fas fa-lock icon-left"></i>Пароль</label>
+                <input type="password" id="login-password" name="password" required>
+                <div id="password-message"></div>
+            </div>
+            <button type="submit" class="auth-button">
+                <i class="fas fa-sign-in-alt icon-left"></i>Войти
+            </button>
+        </form>
+
+        <form id="register-form" class="auth-form" action="{% url 'register_user_url' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" onsubmit="event.preventDefault(); sendForm('register-form', 'POST')">
+            {% csrf_token %}
+            <h2>Регистрация в DVPN</h2>
+            <div class="form-group">
+                <label for="register-nickname"><i class="fas fa-user-tag icon-left"></i>Ник</label>
+                <input type="text" id="register-nickname" name="username" required>
+                <div id="name-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="register-email"><i class="fas fa-envelope icon-left"></i>Почта</label>
+                <input type="email" id="register-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="register-password"><i class="fas fa-key icon-left"></i>Пароль</label>
+                <input type="password" id="register-password" name="password" required>
+                <div id="login-password-message"></div>
+            </div>
+            <button type="submit" class="auth-button register">
+                <i class="fas fa-user-plus icon-left"></i>Зарегистрироваться
+            </button>
+        </form>
+    </div>
+
+    <script src="{% static 'vpn_app/js/script.js' %}"></script>
+    <script>
+        const showLoginBtn = document.getElementById('show-login-btn');
+        const showRegisterBtn = document.getElementById('show-register-btn');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+
+        showLoginBtn.addEventListener('click', () => {
+            loginForm.classList.add('active-form');
+            registerForm.classList.remove('active-form');
+            showLoginBtn.classList.add('active');
+            showRegisterBtn.classList.remove('active');
+        });
+
+        showRegisterBtn.addEventListener('click', () => {
+            registerForm.classList.add('active-form');
+            loginForm.classList.remove('active-form');
+            showRegisterBtn.classList.add('active');
+            showLoginBtn.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

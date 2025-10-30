@@ -1,0 +1,74 @@
+/* vpn_app/static/vpn_app/css/login_styles.css */
+
+.login-page-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    background-color: var(--dash-bg-medium);
+    border-radius: 0.5rem;
+    border: 1px solid var(--dash-border-color);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    overflow: hidden; /* Чтобы скрыть формы */
+}
+
+.login-toggle {
+    display: flex;
+}
+.login-toggle button {
+    flex: 1;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    background-color: transparent;
+    color: var(--dash-text-medium);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-bottom: 3px solid transparent;
+}
+.login-toggle button:hover {
+    background-color: var(--dash-bg-light);
+}
+.login-toggle button.active {
+    color: var(--dash-text-light);
+    border-bottom-color: var(--dash-purple-primary);
+}
+
+.auth-form {
+    display: none; /* Скрыты по умолчанию */
+    padding: 2.5rem;
+    animation: formFadeIn 0.4s ease;
+}
+
+@keyframes formFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-form.active-form {
+    display: block;
+}
+
+.auth-form h2 {
+    text-align: center;
+    color: var(--dash-text-light);
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+}
+
+.auth-button {
+    width: 100%;
+    margin-top: 1rem; /* Отступ сверху для кнопки */
+    padding: 0.85rem; /* Чуть выше */
+    font-size: 1.05rem;
+}
+.auth-button.register {
+    /* Можно добавить другой цвет, но по скриншотам они одинаковые */
+}

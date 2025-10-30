@@ -1,0 +1,643 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления DVPN</title>
+    <base href="{% static '/' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'vpn_app/files/logo.svg' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/dashboard_styles.css' %}">
+    <style>
+        .username-display {
+    color: var(--dash-text-medium);
+    cursor: pointer; /* Добавлено для индикации интерактивности */
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+.username-display:hover {
+    color: var(--dash-purple-light); /* Изменение цвета при наведении */
+}
+.username-display .fa-caret-down {
+    margin-left: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+/* User Dropdown Menu */
+.user-menu-container {
+    position: relative;
+}
+
+.user-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%; /* Позиционируем ниже элемента, который его вызывает */
+    right: 0; /* Выравнивание по правому краю */
+    background-color: var(--dash-bg-medium);
+    border: 1px solid var(--dash-border-color);
+    border-radius: 0.375rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    min-width: 200px;
+    z-index: 10;
+    overflow: hidden; /* Для скругленных углов кнопок */
+}
+
+.user-dropdown-menu.show {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    color: var(--dash-text-light);
+    background-color: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none; /* Для ссылок */
+}
+
+.dropdown-item:hover {
+    background-color: var(--dash-purple-dark);
+    color: var(--dash-text-light);
+}
+
+.dropdown-item .icon-left-small {
+    margin-right: 0.75rem;
+    color: var(--dash-purple-light);
+}
+
+.dropdown-item.logout-item {
+    color: var(--dash-danger);
+    border-top: 1px solid var(--dash-border-color); /* Отделяем кнопку выхода */
+}
+.dropdown-item.logout-item:hover {
+    background-color: var(--dash-danger);
+    color: var(--color-white);
+}
+.dropdown-item.logout-item .icon-left-small {
+    color: var(--dash-danger); /* Изначальный цвет иконки выхода */
+}
+.dropdown-item.logout-item:hover .icon-left-small {
+    color: var(--color-white); /* Белый цвет иконки при наведении на выход */
+}
+
+
+.header-button {
+    background-color: var(--dash-purple-primary);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.375rem; /* rounded-md */
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+.header-button .icon-left { margin-right: 0.5rem; }
+.header-button:hover {
+    background-color: var(--dash-purple-dark);
+    transform: translateY(-1px);
+}
+.logout-button {
+    background-color: var(--dash-danger);
+}
+.logout-button:hover {
+    background-color: #d03434; /* Darker red */
+}
+    </style>
+</head>
+<body class="dashboard-body">
+
+    <header class="dashboard-header">
+        <div class="logo">DVPN <span class="product-name-accent">Control Panel</span></div>
+        <nav>
+            <div class="user-menu-container">
+                <span class="username-display" id="username-menu-toggle">Привет, {{ user.username }}! <i class="fas fa-caret-down"></i></span>
+                <div class="user-dropdown-menu" id="user-dropdown-menu">
+                    <button class="dropdown-item" onclick="openModal('change-email-modal')"><i class="fas fa-envelope icon-left-small"></i> Поменять почту</button>
+                    <button class="dropdown-item" onclick="openModal('change-password-modal')"><i class="fas fa-lock icon-left-small"></i> Поменять пароль</button>
+                    <button class="dropdown-item" onclick="openModal('generate-key-modal')"><i class="fas fa-key icon-left-small"></i> Сгенерировать ключ</button>
+                    <a href="{% url 'logout_user_url' %}" class="dropdown-item logout-item"><i class="fas fa-sign-out-alt icon-left-small"></i> Выйти из аккаунта</a>
+                </div>
+            </div>
+            <!-- <a href="{% url 'logout_user_url' %}" class="header-button logout-button desktop-only"> <i class="fas fa-sign-out-alt icon-left"></i> Отключится</a> -->
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        {% if not user_has_group %}
+        <section class="no-group-section card-style">
+            <h2><i class="fas fa-users-slash icon-left-large"></i>У вас пока нет группы</h2>
+            <p>Создайте новую группу или присоединитесь к существующей, чтобы начать работу.</p>
+            <div class="no-group-actions">
+                <button id="create-group-btn" class="action-button primary">
+                    <i class="fas fa-plus-circle icon-left"></i>Создать группу
+                </button>
+                <button id="join-group-btn" class="action-button secondary">
+                    <i class="fas fa-link icon-left"></i>Присоединиться к группе
+                </button>
+            </div>
+        </section>
+
+        {% else %}
+
+        <section class="group-section card-style">
+            <div class="group-header">
+                <h2><i class="fas fa-users icon-left-large"></i>Ваша группа: <span class="group-name">{{ group.name }}</span></h2>
+                {% if user in group.group_admins.all %}
+                <button id="invite-member-btn" class="action-button admin-action">
+                    <i class="fas fa-user-plus icon-left"></i>Пригласить участника
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="members-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user-circle"></i> Имя участника</th>
+                            <th><i class="fas fa-network-wired"></i> IP-адрес</th>
+                            <th><i class="fas fa-shield-alt"></i> Шифрование</th>
+                            {% if user in group.group_admins.all %}
+                            <th><i class="fas fa-cogs"></i> Действия</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in group_members %}
+                        <tr>
+                            <td>{{ member }} {% if member in group.group_admins.all %}<span class="admin-badge"><i class="fas fa-crown"></i></span>{% endif %}</td>
+                            <td>{{member.group_ip}}</td>
+                            <td>
+
+                                <!-- <span class="status-active"><i class="fas fa-check-circle"></i> Есть</span> -->
+
+                                <span class="status-inactive"><i class="fas fa-times-circle"></i> Нет</span>
+
+                            </td>
+                            {% if user in group.group_admins.all %}
+                            <td>
+                                {% if member.id != user.id %} {# Нельзя удалить самого себя #}
+
+                                    {% if member not in group.group_admins.all %}
+                                    <button class="action-button danger small" onclick="openRemoveModal('{{ member.id }}', '{{ member.name }}')" style="display: inline;">
+                                        <i class="fas fa-user-minus"></i>&nbsp; &nbsp; Удалить
+                                    </button>
+
+                                    {% elif group.creator.id == user.id %}
+                                    <button class="action-button danger small" onclick="openRemoveModal('{{ member.id }}', '{{ member.name }}')" style="display: inline;">
+                                        <i class="fas fa-user-minus"></i>&nbsp; &nbsp; Удалить
+                                    </button>
+
+                                    {% else %}
+                                    <p> Нельзя удалить администратора </p>
+                                    {% endif %}
+
+                                {% else %}
+                                <p> Нельзя удалить себя </p>
+                                {% endif %}
+
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user in group.group_admins.all %}5{% else %}4{% endif %}" class="empty-table-message">В группе пока нет других участников.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="group-actions-footer">
+                <button id="share-peerlist-btn" class="action-button" style="background-color: var(--color-purple-primary);" onclick="openLeaveModal('peers-modal')">
+                    <i class="fas fa-share-alt icon-left"></i>Поделиться peer list
+                </button>
+
+                {% if user.id != group.creator_id %}
+                    <button class="action-button" style="background-color: var(--dash-danger);" onclick="openLeaveModal('leave-member-modal')">
+                        <i class="fas fa-sign-out-alt icon-left"></i>Выйти из группы
+                    </button>
+
+                {% else %}
+                    <button class="action-button" style="background-color: var(--dash-danger);" onclick="openLeaveModal('delete-group-modal')">
+                        <i class="fas fa-sign-out-alt icon-left"></i>Удалить группу
+                    </button>
+                {% endif %}
+                
+            </div>
+        </section>
+        {% endif %}
+    </main>
+
+    {% if not user_has_group %}
+
+        <div id="create-group-modal" class="modal">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('create-group-modal')">&times;</span>
+                <h3><i class="fas fa-users-cog icon-left"></i>Создание новой группы</h3>
+                <form id="create-group-form" action="{% url 'create_group_url' %}" onsubmit="event.preventDefault(); sendForm('create-group-form', 'POST')">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="create-group-name"><i class="fas fa-users icon-left"></i>Название группы:</label>
+                        <input type="text" id="create-group-name" name="group_name" required>
+                        <div id="group-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="create-group-name"><i class="fas fa-groups icon-left"></i>Айпи группы:</label>
+                        <input type="text" id="create-group-name" name="group_ip" required>
+                        <div id="ip-message"></div>
+                    </div>
+                    <button type="submit" class="action-button primary">
+                        <i class="fas fa-check icon-left"></i>Создать группу
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="join-group-modal" class="modal">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('join-group-modal')">&times;</span>
+                <h3><i class="fas fa-link icon-left"></i>Присоединиться к группе</h3>
+                <form id="join-group-form" action="{% url 'join_menu_url' %}" onsubmit="event.preventDefault(); sendForm('join-group-form', 'POST')">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="join-group-code"><i class="fas fa-key icon-left"></i>Код приглашения или ссылка:</label>
+                        <input type="text" id="join-group-code" name="invite_code" required>
+                        <div id="link_menu-message"></div>
+                    </div>
+                    <button type="submit" class="action-button primary">
+                        <i class="fas fa-sign-in-alt icon-left"></i>Присоединиться
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {% endif %}
+    
+
+    {% if user_has_group %}
+
+        <div id="invite-modal" class="modal">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('invite-modal')">&times;</span>
+                <h3><i class="fas fa-user-plus icon-left"></i>Пригласить участника</h3>
+                <form id="invite-form" action="{% url 'generate_invite_url' %}" onsubmit="event.preventDefault(); generateLink('invite-form', 'POST', 'generated-invite')">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="invite-uses"><i class="fas fa-hashtag icon-left"></i>Количество использований ссылки:</label>
+                        <input type="number" id="invite-uses" name="uses" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="invite-expiry"><i class="fas fa-clock icon-left"></i>Время действия ссылки (в часах):</label>
+                        <input type="number" id="invite-expiry" name="expiry" value="24" min="0">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="invite-make-admin" name="make_admin">
+                        <label for="invite-make-admin"><i class="fas fa-crown icon-left"></i>Сделать участника администратором</label>
+                    </div>
+                    <button type="submit" class="action-button primary">
+                        <i class="fas fa-link icon-left"></i>Сгенерировать ссылку
+                    </button>
+                </form>
+                <div id="generated-invite-container" style="display:none; margin-top:1rem;">
+                    <p><strong>Ваша ссылка-приглашение:</strong></p>
+                    <input type="text" id="generated-invite-link" readonly>
+                    <button onclick="copyLink('generated-invite-link')" class="action-button small" style="background-color: var(--dash-purple-primary); display: inline-block; margin-left: 0;" > <i class="fas fa-copy"></i> Копировать</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="leave-member-modal" class="modal">
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('leave-member-modal')">&times;</span>
+                <h3><i class="fas fa-exclamation-triangle icon-left"></i>Подтверждение выхода</h3>
+                <p>Вы уверены, что хотите выйти <strong id="member-to-remove-name"></strong> из группы?</p>
+                <div class="modal-actions">
+                    <button id="confirm-leave-btn" class="action-button danger" onclick="leaveGroup()">
+                        <i class="fas fa-sign-out-alt icon-left"></i>Да
+                    </button>
+                    <button class="action-button secondary" onclick="closeModal('leave-member-modal')">
+                        <i class="fas fa-times icon-left"></i>Нет
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="delete-group-modal" class="modal">
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('delete-group-modal')">&times;</span>
+                <h3><i class="fas fa-exclamation-triangle icon-left"></i>Подтверждение удаления</h3>
+                <p>Вы уверены, что хотите удалить <strong id="member-to-remove-name"></strong> группу?</p>
+                <div class="modal-actions">
+                    <button id="confirm-leave-btn" class="action-button danger" onclick="delGroup(`{% url 'delete_group_url' id=user.current_group_id %}`)">
+                        <i class="fas fa-sign-out-alt icon-left"></i>Да
+                    </button>
+                    <button class="action-button secondary" onclick="closeModal('delete-group-modal')">
+                        <i class="fas fa-times icon-left"></i>Нет
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="remove-member-modal" class="modal">
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('remove-member-modal')">&times;</span>
+                <h3><i class="fas fa-exclamation-triangle icon-left"></i>Подтверждение удаления</h3>
+                <p>Вы уверены, что хотите удалить участника <strong id="member-to-remove-name"></strong> из группы?</p>
+                <div class="modal-actions">
+                    <button id="confirm-remove-btn" class="action-button danger">
+                        <i class="fas fa-trash-alt icon-left"></i>Удалить
+                    </button>
+                    <button class="action-button secondary" onclick="closeModal('remove-member-modal')">
+                        <i class="fas fa-times icon-left"></i>Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="peers-modal" class="modal">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('peers-modal')">&times;</span>
+                <h3><i class="fas fa-user-plus icon-left"></i>Получить ссылку на лист пиров</h3>
+                <form id="peers-form" action="{% url 'generate_peers_url' %}" onsubmit="event.preventDefault(); generateLink('peers-form', 'POST', 'generated-peers')">
+                    {% csrf_token %}
+                    <button type="submit" class="action-button primary">
+                        <i class="fas fa-link icon-left"></i>Сгенерировать ссылку
+                    </button>
+                </form>
+                <div id="generated-peers-container" style="display:none; margin-top:1rem;">
+                    <p><strong>Ваша ссылка-приглашение:</strong></p>
+                    <input type="text" id="generated-peers-link" readonly style="margin-bottom: 10px;">
+                    <button onclick="copyLink('generated-peers-link')" class="action-button small" style="background-color: var(--dash-purple-primary); display: inline-block; margin-left: 0;" > <i class="fas fa-copy"></i> Копировать</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Header -->
+
+        <div id="change-email-modal" class="modal">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('change-email-modal')">&times;</span>
+                <h3><i class="fas fa-envelope icon-left"></i>Поменять почту</h3>
+                <form id="change-email-form" onsubmit="event.preventDefault(); alert('Функционал изменения почты в разработке.'); closeModal('change-email-modal');">
+                    <div class="form-group">
+                        <label for="new-email"><i class="fas fa-at icon-left"></i>Новая почта:</label>
+                        <input type="email" id="new-email" name="new_email" required>
+                    </div>
+                    <button type="submit" class="action-button primary">
+                        <i class="fas fa-save icon-left"></i>Сохранить
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="change-password-modal" class="modal">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('change-password-modal')">&times;</span>
+                <h3><i class="fas fa-lock icon-left"></i>Поменять пароль</h3>
+                <form id="change-password-form" onsubmit="event.preventDefault(); alert('Функционал изменения пароля в разработке.'); closeModal('change-password-modal');">
+                    <div class="form-group">
+                        <label for="current-password"><i class="fas fa-unlock-alt icon-left"></i>Текущий пароль:</label>
+                        <input type="password" id="current-password" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password"><i class="fas fa-key icon-left"></i>Новый пароль:</label>
+                        <input type="password" id="new-password" name="new_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-new-password"><i class="fas fa-check-double icon-left"></i>Подтвердите новый пароль:</label>
+                        <input type="password" id="confirm-new-password" name="confirm_new_password" required>
+                    </div>
+                    <button type="submit" class="action-button primary">
+                        <i class="fas fa-save icon-left"></i>Сохранить
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="generate-key-modal" class="modal">
+            <div class="modal-content card-style">
+                <span class="close-btn" onclick="closeModal('generate-key-modal')">&times;</span>
+                <h3><i class="fas fa-key icon-left"></i>Сгенерировать ключ</h3>
+                <p>Нажмите кнопку ниже, чтобы сгенерировать новый ключ.</p>
+                <div class="modal-actions">
+                    <button type="button" class="action-button primary" onclick="alert('Функционал генерации ключа в разработке.'); closeModal('generate-key-modal');">
+                        <i class="fas fa-sync-alt icon-left"></i>Сгенерировать
+                    </button>
+                    <button type="button" class="action-button secondary" onclick="closeModal('generate-key-modal')">
+                        <i class="fas fa-times icon-left"></i>Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+    
+    {% endif %}
+
+
+    <script src="{% static 'vpn_app/js/script.js' %}"></script>
+    <script>
+        // Логика для модальных окон
+        const inviteModal = document.getElementById('invite-modal');
+        const removeMemberModal = document.getElementById('remove-member-modal');
+        const createGroupModal = document.getElementById('create-group-modal');
+        const joinGroupModal = document.getElementById('join-group-modal');
+        const changeEmailModal = document.getElementById('change-email-modal');
+        const changePasswordModal = document.getElementById('change-password-modal');
+        const generateKeyModal = document.getElementById('generate-key-modal');
+
+
+        const inviteMemberBtn = document.getElementById('invite-member-btn');
+        const createGroupBtn = document.getElementById('create-group-btn');
+        const joinGroupBtn = document.getElementById('join-group-btn');
+        const usernameMenuToggle = document.getElementById('username-menu-toggle');
+        const userDropdownMenu = document.getElementById('user-dropdown-menu');
+
+        if (inviteMemberBtn) {
+            inviteMemberBtn.onclick = () => inviteModal.style.display = "flex";
+        }
+        if (createGroupBtn) {
+            createGroupBtn.onclick = () => createGroupModal.style.display = "flex";
+        }
+        if (joinGroupBtn) {
+            joinGroupBtn.onclick = () => joinGroupModal.style.display = "flex";
+        }
+
+        // Toggle user dropdown menu
+        if (usernameMenuToggle) {
+            usernameMenuToggle.addEventListener('click', function(event) {
+                userDropdownMenu.classList.toggle('show');
+                event.stopPropagation(); // Prevent document click from closing immediately
+            });
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+            // Close dropdown if click outside
+            if (!event.target.closest('.user-menu-container') && userDropdownMenu.classList.contains('show')) {
+                userDropdownMenu.classList.remove('show');
+            }
+        }
+
+    let memberIdToRemove = null;
+
+    function openRemoveModal(memberId, memberName) {
+        memberIdToRemove = memberId;
+        document.getElementById('member-to-remove-name').textContent = memberName;
+        removeMemberModal.style.display = "flex";
+    }
+
+    function openLeaveModal(modalId) {
+        let AnyModal = document.getElementById(modalId)
+        AnyModal.style.display = "flex";
+    }
+
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "flex";
+        if (userDropdownMenu.classList.contains('show')) {
+            userDropdownMenu.classList.remove('show'); // Close dropdown when opening a modal
+        }
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+
+        function leaveGroup() {
+            // Получаем URL из Django-тега.
+            // Важно: Django-тег обрабатывается на сервере ДО того, как JS будет выполнен в браузере.
+            // Поэтому здесь будет уже готовый URL-адрес.
+            const url = `{% url 'leave_group_url' id=user.id %}`; 
+
+            fetch(url)
+                .then(response => {
+                    // Здесь вы можете проверить 'response.ok' или 'response.status'
+                    // чтобы убедиться, что запрос был успешным, прежде чем перезагружать.
+                    if (response.ok) { // Если HTTP статус 2xx
+                        location.reload(); // Перезагружаем страницу
+                    } else {
+                        console.error('Ошибка при выполнении запроса:', response.statusText);
+                        alert('Произошла ошибка при выполнении действия.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка сети или другая проблема:', error);
+                    alert('Произошла ошибка сети.');
+                });
+        }
+
+        function delGroup(my_url) {
+            // Получаем URL из Django-тега.
+            // Важно: Django-тег обрабатывается на сервере ДО того, как JS будет выполнен в браузере.
+            // Поэтому здесь будет уже готовый URL-адрес.
+            const url = my_url; 
+
+            fetch(url)
+                .then(response => {
+                    // Здесь вы можете проверить 'response.ok' или 'response.status'
+                    // чтобы убедиться, что запрос был успешным, прежде чем перезагружать.
+                    if (response.ok) { // Если HTTP статус 2xx
+                        location.reload(); // Перезагружаем страницу
+                    } else {
+                        console.error('Ошибка при выполнении запроса:', response.statusText);
+                        alert('Произошла ошибка при выполнении действия.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка сети или другая проблема:', error);
+                    alert('Произошла ошибка сети.');
+                });
+        }
+
+
+    document.getElementById('confirm-remove-btn')?.addEventListener('click', () => {
+        if (memberIdToRemove) {
+            console.log("Удаление участника:", memberIdToRemove);
+
+            // Get the CSRF token from the meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(`/group/remove_member/${memberIdToRemove}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json' // Often good practice for DELETE
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Handle HTTP errors
+                    return response.json().then(err => { throw new Error(err.message || 'Ошибка сети'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.process = 'success') {
+                    window.location.reload(); // Reload the page on successful deletion
+                } else {
+                    alert('Ошибка удаления: ' + (data.message || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                console.error('Произошла ошибка при удалении участника:', error);
+                alert('Произошла ошибка при удалении участника: ' + error.message);
+            });
+
+            closeModal('remove-member-modal');
+        }
+    });
+
+        function copyLink(ElementId) {
+            const linkInput = document.getElementById(ElementId);
+            linkInput.select();
+            document.execCommand('copy');
+            alert('Ссылка скопирована!');
+        }
+
+        // Обработчики для форм создания/присоединения (AJAX)
+        document.getElementById('create-group-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // AJAX запрос на создание группы
+            // fetch('/api/group/create', { method: 'POST', body: new FormData(this), headers: {'X-CSRFToken': '{{ csrf_token }}' }})
+            // .then(response => response.json())
+            // .then(data => { if(data.success) window.location.reload(); else alert(data.error); });
+            console.log("Создание группы:", this.group_name.value);
+            closeModal('create-group-modal');
+            // window.location.reload(); // Для примера
+        });
+
+        document.getElementById('join-group-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // AJAX запрос на присоединение к группе
+            // fetch('/api/group/join', { method: 'POST', body: new FormData(this), headers: {'X-CSRFToken': '{{ csrf_token }}' }})
+            // .then(response => response.json())
+            // .then(data => { if(data.success) window.location.reload(); else alert(data.error); });
+            console.log("Присоединение к группе, код:", this.invite_code.value);
+            closeModal('join-group-modal');
+            // window.location.reload(); // Для примера
+        });
+
+    </script>
+</body>
+</html>

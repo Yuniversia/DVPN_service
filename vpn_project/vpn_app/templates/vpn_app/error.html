@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ошибка {{ status|default:"404" }} - DVPN</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'vpn_app/files/logo.svg' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'vpn_app/css/login_styles.css' %}">
+    <style>
+        .error-container {
+            text-align: center;
+            color: var(--dash-text-light);
+        }
+        .error-status {
+            font-size: 10rem;
+            font-weight: 800;
+            color: var(--dash-purple-primary);
+            line-height: 1;
+            margin-bottom: 0;
+            opacity: 0.8;
+        }
+        .error-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--dash-text-light);
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        .error-message {
+            font-size: 1.1rem;
+            color: var(--dash-text-medium);
+            margin-bottom: 2.5rem;
+        }
+        .auth-button {
+            padding: 0.8rem 1.5rem;
+        }
+    </style>
+</head>
+<body class="login-page-body">
+
+    <div class="error-container">
+        <h1 class="error-status">{{ status|default:"404" }}</h1>
+        <h2 class="error-title">
+            {% if status == "404" %}
+                Страница не найдена
+            {% elif status == "403" %}
+                Доступ запрещен
+            {% elif status == "500" %}
+                Ошибка сервера
+            {% else %}
+                Произошла ошибка
+            {% endif %}
+        </h2>
+        <p class="error-message">
+            {{ message|default:"К сожалению, страница, которую вы ищете, не существует или была перемещена." }}
+        </p>
+        <a href="{% url 'index' %}" class="auth-button">
+            <i class="fas fa-home icon-left"></i>Вернуться на главную
+        </a>
+    </div>
+
+</body>
+</html>
